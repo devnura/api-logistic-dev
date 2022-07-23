@@ -259,8 +259,63 @@ const refreshToken = async (req, res) => {
   }
 };
 
+// LOGOUT
+const logoutUser = async (req, res) => {
+  try {
+    // generate unique code
+    uniqueCode = req.uniqueCode
+
+    const code = req.user_code;
+
+    const deleteRefreshToken = await model.deleteRefreshToken(code)
+    
+    if (deleteRefreshToken < 1 ) {
+      result = {
+        code: "400",
+        message: "Invalid session !",
+        data: {},
+      };
+
+      // log warn
+      winston.logger.info(
+        `${uniqueCode} RESPONSE : ${JSON.stringify(result)}`
+      );
+
+      return res.status(200).json(result);
+
+    }
+
+    result = {
+      code: "00",
+      message: "Success Logout.",
+      data: {},
+    };
+
+    winston.logger.info(
+      `${uniqueCode} RESPONSE refresh token: ${JSON.stringify(result)}`
+    );
+
+    return res.status(200).json(result);
+    
+  } catch (error) {
+    // create log
+    winston.logger.error(
+      `500 internal server error - backend server | ${error.message}`
+    );
+
+    return res.status(200).json({
+      code: "500",
+      message:
+        process.env.NODE_ENV != "production"
+          ? error.message
+          : "500 internal server error - backend server.",
+      data: {},
+    });
+  }
+}
 
 module.exports = {
   loginUser,
   refreshToken,
+  logoutUser
 };

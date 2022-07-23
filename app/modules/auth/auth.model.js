@@ -18,6 +18,17 @@ const insertRefreshToken = (code, refreshToken) => {
   return result;
 };
 
+// DELETE REFRESH TOKEN
+const deleteRefreshToken = (code) => {
+
+  let result = knex("t_m_refresh_token").where({
+    c_user_code: code,
+  })
+  .delete();
+
+  return result;
+}
+
 // UPDATE REFRESH TOKEN
 const updateRefreshToken = (code, oldRefreshToken, newRefreshToken) => {
   let result = knex("t_m_refresh_token")
@@ -49,6 +60,7 @@ module.exports = {
   checkRefreshToken,
   insertRefreshToken,
   updateRefreshToken,
+  deleteRefreshToken,
   checkUser,
   checUserLogin
 };
