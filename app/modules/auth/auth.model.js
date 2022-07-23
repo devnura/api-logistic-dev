@@ -1,27 +1,27 @@
 const knex = require("../../../infrastructure/database/knex");
 
 // CHECK REFRESH TOKEN IN DATABASE
-const checkRefreshToken = (email, refreshToken) => {
+const checkRefreshToken = (code, refreshToken) => {
   let result = knex("t_m_refresh_token")
     .where("c_refresh_token", refreshToken)
-    .where("c_email", email)
+    .where("c_user_code", code)
     .first();
   return result;
 };
 
 // INSERT REFRESH TOKEN
-const insertRefreshToken = (email, refreshToken) => {
+const insertRefreshToken = (code, refreshToken) => {
   let result = knex("t_m_refresh_token").insert({
-    c_email: email,
+    c_user_code: code,
     c_refresh_token: refreshToken,
   });
   return result;
 };
 
 // UPDATE REFRESH TOKEN
-const updateRefreshToken = (email, oldRefreshToken, newRefreshToken) => {
+const updateRefreshToken = (code, oldRefreshToken, newRefreshToken) => {
   let result = knex("t_m_refresh_token")
-    .where("c_email", email)
+    .where("c_user_code", code)
     .where("c_refresh_token", oldRefreshToken)
     .update({
       c_refresh_token: newRefreshToken,
@@ -38,9 +38,9 @@ const checkUser = (email) => {
   return result;
 };
 
-const checUserLogin = (email) => {
+const checUserLogin = (code) => {
   let result = knex("t_m_refresh_token")
-    .where("c_email", email)
+    .where("c_user_code", code)
     .first()
   return result;
 }

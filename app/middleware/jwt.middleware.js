@@ -24,7 +24,7 @@ const authenticateRefreshToken = (req, res, next) => {
         data: {},
       });
     }
-
+    req.user_code = helper.decryptText(data.user_code)
     next();
   });
 };

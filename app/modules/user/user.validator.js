@@ -1,6 +1,5 @@
 const {
     check,
-    header,
     validationResult
 } = require('express-validator')
 
@@ -13,19 +12,13 @@ const login_rules = () => {
     ]
 }
 
-const refres_token_rules = () => {
-    return [
-        header("refresh_token").notEmpty().withMessage('refresh_token harus terisi!')
-    ]
-}
-
-const validate =  (req, res, next) => {
+const validate = async (req, res, next) => {
         // log info
     winston.logger.info(
-        `${req.uniqueCode} REQUEST : ${JSON.stringify(req.body)}`
+        `${req.uniqueCode} REQUEST login: ${JSON.stringify(req.body)}`
     );
       
-    const errors = validationResult(req)
+    const errors = await validationResult(req)
     if (!errors.isEmpty()) {
         let result = {
             status: '98',
@@ -34,7 +27,7 @@ const validate =  (req, res, next) => {
         }
 
         winston.logger.info(
-            `${req.uniqueCode} RESPONSE : ${JSON.stringify(result)}`
+            `${req.uniqueCode} RESPONSE login: ${JSON.stringify(result)}`
         );
 
         return res.status(400).json(result);
@@ -46,6 +39,5 @@ const validate =  (req, res, next) => {
 
 module.exports = {
     login_rules,
-    refres_token_rules,
     validate
 }
