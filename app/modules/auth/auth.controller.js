@@ -13,7 +13,7 @@ var uniqueCode;
 const loginUser = async (req, res) => {
   try {
     // generate unique code
-    uniqueCode = req.uniqueCode
+    uniqueCode = helper.getUniqueCode()
 
     let { email, password } = req.body;
 
@@ -146,7 +146,7 @@ const loginUser = async (req, res) => {
 const refreshToken = async (req, res) => {
   try {
     // generate unique code
-    uniqueCode = req.uniqueCode
+    uniqueCode = helper.getUniqueCode()
 
     const code = req.user_code;
 
@@ -263,7 +263,7 @@ const refreshToken = async (req, res) => {
 const logoutUser = async (req, res) => {
   try {
     // generate unique code
-    uniqueCode = req.uniqueCode
+    uniqueCode = helper.getUniqueCode()
 
     const code = req.user_code;
 

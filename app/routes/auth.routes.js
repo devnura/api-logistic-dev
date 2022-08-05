@@ -10,8 +10,8 @@ const {
 } = require('../modules/auth/auth.validator')
 
 // ============================== AUTH ==============================
-router.post("/login", helper.getRequestCode, login_rules(), validate, controller.loginUser);
-router.post("/refresh-token", helper.getRequestCode, refres_token_rules(), validate, auth.authenticateRefreshToken,controller.refreshToken);
-router.post("/logout", helper.getRequestCode, auth.authenticateToken, controller.logoutUser);
+router.post("/login", login_rules(), validate, controller.loginUser);
+router.post("/refresh-token", refres_token_rules(), validate, auth.authenticateRefreshToken,controller.refreshToken);
+router.post("/logout", auth.authenticateToken, controller.logoutUser);
 
 module.exports = router;

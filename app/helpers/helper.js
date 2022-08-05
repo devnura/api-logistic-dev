@@ -25,14 +25,8 @@ function getUniqueCode() {
   return v4();
 }
 
-function getRequestCode(req, res, next) {
-  req.uniqueCode = v4()
-  next()
-}
-
 module.exports = {
   encryptText,
   decryptText,
-  getUniqueCode,
-  getRequestCode
+  getUniqueCode
 };
