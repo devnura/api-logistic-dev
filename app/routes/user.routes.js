@@ -2,14 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/jwt.middleware");
 const controller = require("../modules/user/user.controller");
-const helper = require('../helpers/helper')
 
-const {
-  create_rules,
-  update_rules,
-  change_password_rules,
-  validate
-} = require('../modules/user/user.validator')
 
 // ============================== USER ==============================
 
@@ -27,17 +20,28 @@ router.get(
 router.post(
   "/",
   auth.authenticateToken,
-  create_rules(),
-  validate,
+  controller.validate('createUser'),
   controller.insertUser
 );
 
-// router.post(
-//   "/refresh-token",
-//   auth.authenticateRefreshToken,
-//   // controller.validate("refreshToken"),
-//   controller.refreshToken
-// );
+router.put(
+  "/:code",
+  auth.authenticateToken,
+  controller.validate('updateUser'),
+  controller.updateUser
+);
 
+router.put(
+  "/reset-password/:code",
+  auth.authenticateToken,
+  controller.validate('resetPassword'),
+  controller.resetPassword
+);
+
+router.delete(
+  "/:code",
+  auth.authenticateToken,
+  controller.deleteUser
+);
 
 module.exports = router;

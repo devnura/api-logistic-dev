@@ -26,6 +26,7 @@ const getUsers = async (trx) => {
     .leftJoin('public.t_m_group as tmg', function () {
       this.on('tmg.c_group_code', '=', 'tmu.c_group_code')
     })
+    .where("tmu.c_status", "A")
     .orderBy("tmu.c_code", "DESC")
 
   return result;
@@ -60,6 +61,7 @@ const getUser = async (params, trx) => {
       this.on('tmg.c_group_code', '=', 'tmu.c_group_code')
     })
     .where("tmu.c_code", params)
+    .where("tmu.c_status", "A")
     .first();
 
   return result;

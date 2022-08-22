@@ -42,8 +42,8 @@ const updateRefreshToken = (code, oldRefreshToken, newRefreshToken) => {
 
 // CHECK LOGIN USER
 const checkUser = (email) => {
-  let result = knex("t_m_user")
-    .where("c_status", "!=", "X")
+  let result = knex("t_m_user as tmu")
+    .where("tmu.c_status", "!=", "X")
     .where("c_email", email)
     .first();
   return result;

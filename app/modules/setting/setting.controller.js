@@ -89,7 +89,7 @@ exports.getUsers = async (req, res) => {
         winston.logger.debug(`${uniqueCode} getting users...`);
 
         // check data login
-        let getUsers = await model.getUsers(db)
+        let getUsers = await model.getUsers()
 
         // log debug
         winston.logger.debug(`${uniqueCode} result users : ${JSON.stringify(getUsers)}`);
@@ -133,7 +133,7 @@ exports.getUser = async (req, res) => {
         winston.logger.debug(`${uniqueCode} getting user : ${code}`);
 
         // check data login
-        let getUser = await model.getUser(code, db)
+        let getUser = await model.getUser(code)
 
         // log debug
         winston.logger.debug(`${uniqueCode} result user : ${JSON.stringify(getUser)}`);
@@ -202,7 +202,7 @@ exports.insertUser = async (req, res) => {
             user_code: req.code,
             user_name: req.name
         }
-
+        console.log(payload)
         await db.transaction(async trx => {
             // check data login
             let checkDuplicate = await model.checkDuplicatedInsert(body, trx)
