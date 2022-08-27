@@ -155,9 +155,18 @@ const checkDuplicatedInsert = async (data, trx) => {
 }
 
 const generateUserCode = async (trx) => {
-  let result = await trx.raw("SELECT 'U'||to_char(NOW(), 'YYMMDD')||LPAD((COUNT(i_id)+1)::text, 3, '0') AS user_code FROM t_m_user tmu WHERE substring(c_code, 0,8) = 'U'||to_char(now(), 'YYMMDD')")
 
-  return result.rows[0].user_code
+  let code = ''
+  const prefix = 'U' 
+  let result = await trx.raw("SELECT substring(tmu.c_code, 2, 3)::INT AS code FROM public.t_m_user tmu ORDER BY substring(tmu.c_code, 2, 3)::INT DESC LIMIT 1")
+  // console.log(result.rows)
+  if(result.rows.length > 0){
+      code = prefix+""+String(parseInt(result.rows[0].code) + 1).padStart(3, '0')
+  }else{
+      code = prefix+""+String(1).padStart(3, '0')
+  }
+
+  return code
 }
 
 const checkUpdate = async (params, data, before, trx) => {

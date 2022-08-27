@@ -78,7 +78,7 @@ exports.validate = (method) => {
 
 exports.getUsers = async (req, res) => {
     try {
-
+          
         uniqueCode = helper.getUniqueCode()
 
         // log info
@@ -98,14 +98,14 @@ exports.getUsers = async (req, res) => {
             code: "00",
             message: "Success.",
             data: getUsers,
-        };
+        }; 
 
         // log info
         winston.logger.info(
             `${uniqueCode} RESPONSE get users : ${JSON.stringify(result)}`
         );
 
-        return res.status(200).json(result);
+        return res.status(200).send(result);
 
     } catch (error) {
         // create log
@@ -144,13 +144,12 @@ exports.getUser = async (req, res) => {
             data: getUser ? getUser : {},
         };
 
-        // result 
         // log info
         winston.logger.info(
             `${uniqueCode} RESPONSE user : ${JSON.stringify(result)}`
         );
 
-        return res.status(200).json(result);
+        return res.status(200).send(result);
 
     } catch (error) {
         // create log
@@ -260,7 +259,7 @@ exports.insertUser = async (req, res) => {
                     `${uniqueCode} RESPONSE create user : ${JSON.stringify(result)}`
                 );
 
-                return res.status(200).json(result);
+                return res.status(200).send(result);
             }
 
             result = {
@@ -275,7 +274,7 @@ exports.insertUser = async (req, res) => {
             );
         })
 
-        return res.status(200).json(result);
+        return res.status(200).send(result);
 
     } catch (error) {
         // create log
@@ -344,7 +343,7 @@ exports.updateUser = async (req, res) => {
                     `${uniqueCode} RESPONSE update user : ${JSON.stringify(result)}`
                 );
 
-                return res.status(200).json(result);
+                return res.status(200).send(result);
             }
 
             // check
@@ -384,7 +383,7 @@ exports.updateUser = async (req, res) => {
                     `${uniqueCode} RESPONSE create user : ${JSON.stringify(result)}`
                 );
 
-                return res.status(200).json(result);
+                return res.status(200).send(result);
             }
 
             result = {
@@ -400,7 +399,7 @@ exports.updateUser = async (req, res) => {
 
         })
 
-        return res.status(200).json(result);
+        return res.status(200).send(result);
 
     } catch (error) {
         // create log
@@ -441,7 +440,7 @@ exports.deleteUser = async (req, res) => {
                 `${uniqueCode} RESPONSE delete user: ${JSON.stringify(result)}`
             );
 
-            return res.status(200).json(result);
+            return res.status(200).send(result);
         }
 
         const payload = {
@@ -465,7 +464,7 @@ exports.deleteUser = async (req, res) => {
                     `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
                 );
 
-                return res.status(200).json(result);
+                return res.status(200).send(result);
             }
 
             result = {
@@ -481,7 +480,7 @@ exports.deleteUser = async (req, res) => {
 
         })
 
-        return res.status(200).json(result);
+        return res.status(200).send(result);
 
     } catch (error) {
         // create log
@@ -522,7 +521,7 @@ exports.resetPassword = async (req, res) => {
                 `${uniqueCode} RESPONSE reset password : ${JSON.stringify(result)}`
             );
 
-            return res.status(200).json(result);
+            return res.status(200).send(result);
         }
 
         let {
@@ -570,7 +569,7 @@ exports.resetPassword = async (req, res) => {
                     `${uniqueCode} RESPONSE reset password : ${JSON.stringify(result)}`
                 );
 
-                return res.status(200).json(result);
+                return res.status(200).send(result);
             }
 
             result = {
@@ -586,7 +585,7 @@ exports.resetPassword = async (req, res) => {
 
         })
 
-        return res.status(200).json(result);
+        return res.status(200).send(result);
 
     } catch (error) {
         // create log
