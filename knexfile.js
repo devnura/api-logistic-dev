@@ -22,10 +22,10 @@ module.exports = {
   production: {
     client: "pg",
     connection: {
-      host : '10.1.201.95',
+      host : '',
       database: "postgres",
-      user: "cms",
-      password: "Cm5kc1#2021",
+      user: "",
+      password: "",
     },
     pool: {
       min: 2,
