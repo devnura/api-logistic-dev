@@ -73,7 +73,7 @@ const authenticateToken = (req, res, next) => {
       if (err) {
         return res.json({
           code: "402",
-          message: "Invalid Token.",
+          message: err.message,
           data: {},
         });
       }
