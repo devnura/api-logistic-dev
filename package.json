@@ -25,6 +25,7 @@
     "crypto-js": "^4.1.1",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "express-fileupload": "^1.4.0",
     "express-validator": "^6.10.0",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.95.4",

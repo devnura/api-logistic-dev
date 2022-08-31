@@ -1,54 +1,6 @@
 const multer = require("multer");
 const fs = require("fs");
-
-// Excel
-const excelFilter = (req, file, cb) => {
-  if (
-    file.mimetype.includes("excel") ||
-    file.mimetype.includes("spreadsheetml")
-  ) {
-    cb(null, true);
-  } else {
-    return cb("The uploaded file, isn't compatible :( we're sorry");
-  }
-};
-
-let storageExcel = multer.diskStorage({
-  destination: (req, file, cb) => {
-
-    let dir = `${process.cwd()}/public/uploads/excel/`;
-
-    if (!fs.existsSync(dir)){
-      fs.mkdirSync(dir, {
-        recursive: true
-      });
-    }
-    
-    return cb(null, dir);
-
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-YOSANGGI-${file.originalname}`);
-  },
-});
-
-let uploadFileExcel = multer({ storage: storageExcel, fileFilter: excelFilter }).single("file");
-
-exports.uploadExcel = (req, res, next) => {
-
-  uploadFileExcel(req, res, function (err) {
-
-      if (err) {
-          return res.status(200).json(result = {
-            code: "01",
-            message: "The uploaded file, isn't compatible :( we're sorry",
-            data: {},
-        });
-      }
-      next()
-  })
-}
-
+const helper = require("../helpers/helper")
 //  PDF
 const pdfFilter = (req, file, cb) => {
 
@@ -62,7 +14,7 @@ const pdfFilter = (req, file, cb) => {
 let pdfStorage = multer.diskStorage({
   destination: (req, file, cb) => {
 
-    let dir = `${process.cwd()}/public/uploads/pdf`;
+    let dir = `${process.cwd()}/public/uploads/`;
 
     if (!fs.existsSync(dir)){
       fs.mkdirSync(dir, {
@@ -74,11 +26,14 @@ let pdfStorage = multer.diskStorage({
 
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${req.params.folder}-${req.params.code}-${file.originalname}`);
+    let random = helper.getRandomStrig()
+    let extArray = file.mimetype.split("/");
+    let extension = extArray[extArray.length - 1];
+    cb(null, `${Date.now()}-${random}.${extension}`);
   },
 });
 
-let uploadFilePdf = multer({ storage: pdfStorage, fileFilter: pdfFilter }).single("file");
+let uploadFilePdf = multer({ storage: pdfStorage, fileFilter: pdfFilter,limits: { fileSize: 2097152 }  }).single("file");
 
 exports.uploadPDF = (req, res, next) => {
 
@@ -87,7 +42,7 @@ exports.uploadPDF = (req, res, next) => {
       if (err) {
           return res.status(200).json(result = {
             code: "01",
-            message: "The uploaded file, isn't compatible :( we're sorry",
+            message: err.message,
             data: {},
         });
       }
