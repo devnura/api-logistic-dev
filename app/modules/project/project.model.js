@@ -59,7 +59,48 @@ const find = async (trx, code) => {
     return result;
 };
 
+const create = async (trx, body, payload) => {
+  const result =  await trx("trx.t_d_project").insert({
+      "c_project_name": body.c_project_name,
+      "c_project_number": "PR02",
+      "c_project_manager_code": body.c_project_manager_code,
+      "c_project_manager_name": body.c_project_manager_name,
+      "d_porject_start": body.d_porject_start,
+      "d_project_end": body.d_project_end,
+      "c_doc_project_number": body.c_doc_project_number,
+      "c_doc_contract_number": body.c_doc_contract_number,
+      "c_doc_spdb_number": body.c_doc_spdb_number,
+      "c_doc_project_url": body.c_doc_project_url,
+      "c_note": body.c_note,
+      "c_created_by" : payload.user_code ,
+      "n_created_by" : payload.user_name ,
+  },["c_project_number"])
+  return result
+} 
+const update = async (trx, body, payload, code) => {
+  const result =  await trx("trx.t_d_project").update({
+      "c_project_name": body.c_project_name,
+      "c_project_number": "PR02",
+      "c_project_manager_code": body.c_project_manager_code,
+      "c_project_manager_name": body.c_project_manager_name,
+      "d_porject_start": body.d_porject_start,
+      "d_project_end": body.d_project_end,
+      "c_doc_project_number": body.c_doc_project_number,
+      "c_doc_contract_number": body.c_doc_contract_number,
+      "c_doc_spdb_number": body.c_doc_spdb_number,
+      "c_doc_project_url": body.c_doc_project_url,
+      "c_note": body.c_note,
+      "c_created_by" : payload.user_code ,
+      "n_created_by" : payload.user_name ,
+  },["c_project_number"])
+  .where("c_project_number", code)
+
+  return result
+} 
+
 module.exports = {
     findAll,
-    find
+    find,
+    create,
+    update
 };

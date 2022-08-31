@@ -191,6 +191,7 @@ exports.find = async (req, res) => {
 }
 
 exports.create = async (req, res) => {
+    const trx = await db.transaction();
     try {
 
         uniqueCode = helper.getUniqueCode()
@@ -203,6 +204,8 @@ exports.create = async (req, res) => {
         // check validator
         const err = validationResult(req, res);
         if (!err.isEmpty()) {
+            trx.rollback();
+            await unlinkAsync(req.file.path)
             result = {
                 code: "400",
                 message: err.errors[0].msg,
@@ -225,9 +228,9 @@ exports.create = async (req, res) => {
             user_code: req.code,
             user_name: req.name
         }
-
         let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
-
+        body = {...req.body, ...{c_doc_project_url: file_url}}
+        const create = await model.create(trx, body, payload)
         result = {
             code: "400",
             message: "Success",
@@ -241,13 +244,14 @@ exports.create = async (req, res) => {
         winston.logger.warn(
             `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
         );
-
+        await trx.commit()
         return res.status(200).send(result);
 
     } catch (error) {
         // create log
 
-        // await unlinkAsync(req.file.path)
+        await unlinkAsync(req.file.path)
+        trx.rollback();
 
         winston.logger.error(
             `500 internal server error - backend server | ${error.message}`

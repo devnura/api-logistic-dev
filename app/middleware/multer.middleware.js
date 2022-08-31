@@ -50,6 +50,7 @@ exports.uploadPDF = (req, res, next) => {
         data: {},
       });
     }
+
     if (!req.file) {
       return res.status(200).json(result = {
         code: "01",
@@ -57,6 +58,7 @@ exports.uploadPDF = (req, res, next) => {
         data: {},
       });
     }
+    
     next()
   })
 }
