@@ -12,6 +12,13 @@ const model = require("./project.model");
 const moment = require("moment");
 moment.locale("id");
 
+const fs = require('fs')
+const {
+    promisify
+} = require('util')
+
+const unlinkAsync = promisify(fs.unlink)
+
 var result = {};
 var uniqueCode;
 
@@ -219,10 +226,15 @@ exports.create = async (req, res) => {
             user_name: req.name
         }
 
+        let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
+
         result = {
             code: "400",
             message: "Success",
-            data: req.body,
+            data: {
+                data : req.body,
+                file :  file_url
+            },
         };
 
         // log warn
@@ -234,6 +246,9 @@ exports.create = async (req, res) => {
 
     } catch (error) {
         // create log
+
+        // await unlinkAsync(req.file.path)
+
         winston.logger.error(
             `500 internal server error - backend server | ${error.message}`
         );
