@@ -26,12 +26,13 @@ router.post(
   controller.create
 );
 
-// router.put(
-//   "/:code",
-//   auth.authenticateToken,
-//   controller.validate('update'),
-//   controller.updateUser
-// );
+router.put(
+  "/:code",
+  auth.authenticateToken,
+  multer.uploadPDF,
+  controller.validate('update'),
+  controller.update
+);
 
 // router.delete(
 //   "/:code",

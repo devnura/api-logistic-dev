@@ -59,27 +59,38 @@ exports.validate = (method) => {
 
         case "update":
             return [
-                check("code").notEmpty().withMessage('code harus terisi!'),
-                body('c_first_name').notEmpty().withMessage('c_first_name harus terisi!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_firstname is out of length!'),
-                body('c_last_name').notEmpty().withMessage('c_last_name is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_lastname is out of length!'),
-                body('c_group_code').notEmpty().withMessage('c_group_code harus terisi!')
-                .isLength({
-                    max: 8
-                }).withMessage('c_group_code is out of length!'),
-                body('c_email').notEmpty().withMessage('c_email harus terisi!').isEmail().withMessage("Invalid Email format")
+                body('c_project_name').notEmpty().withMessage('c_project_name is required!')
                 .isLength({
                     max: 64
-                }).withMessage('c_email is out of length!')
+                }).withMessage('c_project_name is out of length!'),
+
+                body('c_project_manager_code').notEmpty().withMessage('c_project_manager_code is required!')
+                .isLength({
+                    max: 32
+                }).withMessage('c_project_manager_code is out of length!'),
+
+                body('c_project_manager_name').notEmpty().withMessage('c_project_manager_name is required!')
+                .isLength({
+                    max: 32
+                }).withMessage('c_project_manager_name is out of length!'),
+
+                body('c_note').exists().withMessage('c_note is required!')
+                .isLength({
+                    max: 32
+                }).withMessage('c_note is out of length!'),
+
+                body('d_project_date').notEmpty().withMessage('d_project_date is required!')
+                .isISO8601().withMessage('invalid d_project_start format YYYY-MM-DD !').escape().trim(),
+
+                body('d_project_start').notEmpty().withMessage('d_project_start is required!')
+                .isISO8601().withMessage('invalid d_project_start format YYYY-MM-DD !').escape().trim(),
+
+                body('d_project_end').notEmpty().withMessage('d_project_end is required!')
+                .isISO8601().withMessage('invalid d_project_end format YYYY-MM-DD !').escape().trim(),
             ]
     
         default:
-            break;
+        break;
     }
 };
 
@@ -193,10 +204,35 @@ exports.create = async (req, res) => {
 
         uniqueCode = helper.getUniqueCode()
 
+        let {
+            body
+        } = req
+
+        const payload = {
+            user_code: req.code,
+            user_name: req.name
+        }
+
         // log info
         winston.logger.info(
             `${uniqueCode} REQUEST create project  : ${JSON.stringify(req.body)}`
         );
+
+        if (!req.file) {
+            trx.rollback();
+            result = {
+                code: "400",
+                message: "Please Upload a PDF !",
+                data: {},
+            };
+
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).send(result);
+          }
 
         // check validator
         const err = validationResult(req, res);
@@ -214,14 +250,10 @@ exports.create = async (req, res) => {
                 `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
             );
 
-            return res.status(200).json(result);
+            return res.status(200).send(result);
         }
 
-        let {
-            body
-        } = req
-
-        if (moment(body.d_project_start).isAfter(body.d_project_end)) {
+        if (moment(body.d_project_start).isSameOrAfter(body.d_project_end)) {
             trx.rollback();
             await unlinkAsync(req.file.path)
             result = {
@@ -238,16 +270,10 @@ exports.create = async (req, res) => {
             return res.status(200).json(result);
         }
 
-        const payload = {
-            user_code: req.code,
-            user_name: req.name
-        }
-
         let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
 
         let code = await model.generateProjectCode(trx, moment(body.d_project_date).format("YYMMDD"))
 
-        console.log(code)
         body = {...req.body, ...{
             c_doc_project_url: file_url,
             c_project_number: code
@@ -271,7 +297,7 @@ exports.create = async (req, res) => {
         // create log
 
         await unlinkAsync(req.file.path)
-        trx.rollback();
+        await trx.rollback();
 
         winston.logger.error(
             `500 internal server error - backend server | ${error.message}`
@@ -286,21 +312,31 @@ exports.create = async (req, res) => {
     }
 }
 
-exports.updateUser = async (req, res) => {
+exports.update = async (req, res) => {
+    const trx = await db.transaction();
     try {
 
         uniqueCode = helper.getUniqueCode()
 
+        let {
+            body
+        } = req
+
+        const payload = {
+            user_code: req.code,
+            user_name: req.name
+        }
+
         // log info
         winston.logger.info(
-            `${uniqueCode} REQUEST update user  : ${JSON.stringify(req.body)}`
+            `${uniqueCode} REQUEST update project  : ${JSON.stringify(req.body)}`
         );
 
         // check validator
         const err = validationResult(req, res);
         if (!err.isEmpty()) {
             result = {
-                code: "400",
+                code: "01",
                 message: err.errors[0].msg,
                 data: {},
             };
@@ -312,91 +348,75 @@ exports.updateUser = async (req, res) => {
 
             return res.status(200).json(result);
         }
-
-        let {
-            body
-        } = req
-
-        const payload = {
-            user_code: req.code,
-            user_name: req.name
-        }
-
-        await db.transaction(async trx => {
-
-            let before = await model.getUser(req.params.code, trx)
-            if (!before) {
-
-                result = {
-                    code: "01",
-                    message: "user not found.",
-                    data: {},
-                };
-
-                // log info
-                winston.logger.info(
-                    `${uniqueCode} RESPONSE update user : ${JSON.stringify(result)}`
-                );
-
-                return res.status(200).send(result);
-            }
-
-            // check
-            let checkDuplicate = await model.checkUpdate(req.params.code, body, before, trx)
-            if (checkDuplicate) {
-
-                result = {
-                    code: "01",
-                    message: "email or phone number already registered.",
-                    data: {},
-                };
-
-                // log info
-                winston.logger.info(
-                    `${uniqueCode} RESPONSE update user : ${JSON.stringify(result)}`
-                );
-
-                return res.status(200).json(result);
-            }
-
-            // log debug
-            winston.logger.debug(`${uniqueCode} encrypting password...`);
-
-            // log debug
-            winston.logger.debug(`${uniqueCode} update user...`);
-            
-            const updateUser = await model.updateUser(req.params.code, body, payload, trx)
-            if (!updateUser) {
-                result = {
-                    code: "01",
-                    message: "Fled.",
-                    data: {},
-                };
-
-                // log info
-                winston.logger.info(
-                    `${uniqueCode} RESPONSE create user : ${JSON.stringify(result)}`
-                );
-
-                return res.status(200).send(result);
-            }
-
+        console.log(1)
+        if (moment(body.d_project_start).isSameOrAfter(body.d_project_end)) {
+            await trx.rollback();
+            if(req.file) await unlinkAsync(req.file.path)
             result = {
-                code: "00",
-                message: "Success.",
-                data: updateUser,
+                code: "01",
+                message: "d_project_start must before d_project_end",
+                data: {},
             };
 
-            // log info
-            winston.logger.info(
-                `${uniqueCode} RESPONSE create user : ${JSON.stringify(result)}`
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
             );
 
-        })
+            return res.status(200).json(result);
+        }
+        console.log(1)
+        let oldData = await model.find(trx, req.params.code)
+        if(!oldData){
+            await trx.rollback();
+            if(req.file) await unlinkAsync(req.file.path)
+            result = {
+                code: "01",
+                message: "Project undefined ! ",
+                data: {},
+            };
 
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).json(result);
+        }
+        console.log(1)
+        if (req.file) {
+            // remove old file
+            console.log(process.cwd())
+            let oldFile = oldData.c_doc_project_url.split("/").splice(-4).join("/")
+            await unlinkAsync(`${process.cwd()}/${oldFile}`)
+            // C:\Users\user\Documents\GitHub\api-logistic-dev\public\uploads\pdf\1662022757817-c201db7f.pdf
+            // upload new file
+            let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
+            body = {...req.body, ...{
+                c_doc_project_url: file_url
+            }}
+
+        }
+
+        const create = await model.update(trx, body, payload, req.params.code)
+        result = {
+            code: "00",
+            message: "Success",
+            data: create? create : {},
+        };
+
+        // log warn
+        winston.logger.warn(
+            `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
+        );
+        await trx.commit()
         return res.status(200).send(result);
 
+
     } catch (error) {
+
+        await trx.rollback();
+        await unlinkAsync(req.file.path)
         // create log
         winston.logger.error(
             `500 internal server error - backend server | ${error.message}`
