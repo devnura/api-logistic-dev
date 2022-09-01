@@ -47,16 +47,13 @@ exports.validate = (method) => {
                     max: 32
                 }).withMessage('c_note is out of length!'),
 
-                body('d_porject_start').notEmpty().withMessage('d_porject_start is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('d_porject_start is out of length!')
-                .isISO8601().withMessage('invalid d_porject_start format YYYY-MM-DD !').escape().trim(),
+                body('d_project_date').notEmpty().withMessage('d_project_date is required!')
+                .isISO8601().withMessage('invalid d_project_start format YYYY-MM-DD !').escape().trim(),
+
+                body('d_project_start').notEmpty().withMessage('d_project_start is required!')
+                .isISO8601().withMessage('invalid d_project_start format YYYY-MM-DD !').escape().trim(),
 
                 body('d_project_end').notEmpty().withMessage('d_project_end is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('d_project_end is out of length!')
                 .isISO8601().withMessage('invalid d_project_end format YYYY-MM-DD !').escape().trim(),
             ]
 
@@ -224,13 +221,32 @@ exports.create = async (req, res) => {
             body
         } = req
 
+        if (moment(body.d_project_start).isAfter(body.d_project_end)) {
+            trx.rollback();
+            await unlinkAsync(req.file.path)
+            result = {
+                code: "400",
+                message: "d_project_start must before d_project_end",
+                data: {},
+            };
+
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).json(result);
+        }
+
         const payload = {
             user_code: req.code,
             user_name: req.name
         }
 
         let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
-        let code = await model.generateProjectCode(trx, '220101')
+
+        let code = await model.generateProjectCode(trx, moment(body.d_project_date).format("YYMMDD"))
+
         console.log(code)
         body = {...req.body, ...{
             c_doc_project_url: file_url,
