@@ -313,9 +313,9 @@ exports.create = async (req, res) => {
 }
 
 exports.update = async (req, res) => {
-    const trx = await db.transaction();
+    const trx = {};
     try {
-
+        trx = await db.transaction()
         uniqueCode = helper.getUniqueCode()
 
         let {
