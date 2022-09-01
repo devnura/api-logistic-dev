@@ -62,7 +62,7 @@ const find = async (trx, code) => {
 const create = async (trx, body, payload) => {
   const result =  await trx("trx.t_d_project").insert({
       "c_project_name": body.c_project_name,
-      "c_project_number": "PR02",
+      "c_project_number": body.c_project_number,
       "c_project_manager_code": body.c_project_manager_code,
       "c_project_manager_name": body.c_project_manager_name,
       "d_porject_start": body.d_porject_start,
@@ -77,6 +77,7 @@ const create = async (trx, body, payload) => {
   },["c_project_number"])
   return result
 } 
+
 const update = async (trx, body, payload, code) => {
   const result =  await trx("trx.t_d_project").update({
       "c_project_name": body.c_project_name,
@@ -98,9 +99,33 @@ const update = async (trx, body, payload, code) => {
   return result
 } 
 
+const generateProjectCode = async (trx, projectDate) => {
+  let code = ""
+  let prefix = `PROJ${projectDate}`
+
+  let result =await  trx.select([trx.raw(`substring(c_project_number, 11, 3) AS code`)])
+                .from("trx.t_d_project")
+                .whereRaw(`substring(c_project_number, 1, 10) = '${prefix}'`)
+                .orderBy('c_project_number', 'DESC')
+                .first()
+                
+  if(result){
+    let counter = parseInt(result.code)+1
+    counter = String(counter).padStart(3, '0');
+    code = `${prefix}${counter}`
+
+  }else{
+    code = `${prefix}001`
+  }
+
+  return code
+
+}
+
 module.exports = {
     findAll,
     find,
     create,
-    update
+    update,
+    generateProjectCode
 };

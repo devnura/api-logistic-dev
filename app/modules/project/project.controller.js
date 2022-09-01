@@ -228,16 +228,20 @@ exports.create = async (req, res) => {
             user_code: req.code,
             user_name: req.name
         }
+
         let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
-        body = {...req.body, ...{c_doc_project_url: file_url}}
+        let code = await model.generateProjectCode(trx, '220101')
+        console.log(code)
+        body = {...req.body, ...{
+            c_doc_project_url: file_url,
+            c_project_number: code
+        }}
+
         const create = await model.create(trx, body, payload)
         result = {
             code: "400",
             message: "Success",
-            data: {
-                data : req.body,
-                file :  file_url
-            },
+            data: create? create : {},
         };
 
         // log warn
