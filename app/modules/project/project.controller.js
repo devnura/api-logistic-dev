@@ -512,7 +512,8 @@ exports.delete = async (req, res) => {
                 return res.status(200).send(result);
             }
 
-            const deleteProject = await model.deleteProject(req.params.code, payload, trx)
+            const deleteProject = await model.deleteProject(trx, req.params.code, payload)
+            console.log("ABC : ",deleteProject)
             if (!deleteProject) {
                 result = {
                     code: "01",

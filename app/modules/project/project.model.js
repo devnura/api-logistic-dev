@@ -106,6 +106,23 @@ const update = async (trx, body, payload, code) => {
   return result
 } 
 
+const deleteProject = async (trx, params, payload) => {
+  console.log(params, payload)
+  let rows = await trx('trx.t_d_project').update({
+    "c_status": "X",
+    "c_status_name" : "DELETED",
+    "c_deleted_by" : payload.user_code,
+    "n_deleted_by" : payload.user_name,
+    "d_deleted_at": trx.raw('NOW()')
+  }, ['c_project_number'])
+  .where({
+    "c_project_number": params
+  })
+  .whereNot("c_status", 'X')
+  console.log("return : ", rows)
+  return rows
+}
+
 const generateProjectCode = async (trx, projectDate) => {
   let code = ""
   let prefix = `PROJ${projectDate}`
@@ -131,7 +148,7 @@ const generateProjectCode = async (trx, projectDate) => {
 }
 
 const getPurchaseOrder = async (trx, code) => {
-  const result = await trx.select(["c_po_number"]).where("c_project_number", code).whereNot('c_status', 'X').first()
+  const result = await trx("trx.t_d_purchase_order").select(["c_po_number"]).where("c_project_number", code).whereNot('c_status', 'X').first()
   return result
 }
 
@@ -141,5 +158,6 @@ module.exports = {
     create,
     update,
     generateProjectCode,
-    getPurchaseOrder
+    getPurchaseOrder,
+    deleteProject
 };
