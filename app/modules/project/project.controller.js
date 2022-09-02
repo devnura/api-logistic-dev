@@ -219,7 +219,7 @@ exports.create = async (req, res) => {
 
         if (!req.file) {
             result = {
-                code: "400",
+                code: "02",
                 message: "Please Upload a PDF !",
                 data: {},
             };
@@ -231,14 +231,14 @@ exports.create = async (req, res) => {
 
             return res.status(200).send(result)
 
-          }
+        }
 
         // check validator
         const err = validationResult(req, res);
         if (!err.isEmpty()) {
             await unlinkAsync(req.file.path)
             result = {
-                code: "400",
+                code: "99",
                 message: err.errors[0].msg,
                 data: {},
             };
@@ -254,7 +254,7 @@ exports.create = async (req, res) => {
         if (moment(body.d_project_start).isSameOrAfter(body.d_project_end)) {
             await unlinkAsync(req.file.path)
             result = {
-                code: "400",
+                code: "03",
                 message: "d_project_start must before d_project_end",
                 data: {},
             };
@@ -268,6 +268,7 @@ exports.create = async (req, res) => {
         }
 
         await db.transaction(async trx => {
+
             let code = await model.generateProjectCode(trx, moment(body.d_project_date).format("YYMMDD"))
             let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
 
@@ -277,20 +278,35 @@ exports.create = async (req, res) => {
             }}
 
             const create = await model.create(trx, body, payload)
+            if (!create) {
+                result = {
+                    code: "01",
+                    message: "Failed.",
+                    data: {},
+                };
+
+                // log info
+                winston.logger.warn(
+                    `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
+                );
+
+                return res.status(200).json(result);
+            }
+
             result = {
-                code: "400",
+                code: "00",
                 message: "Success",
                 data: create? create : {},
             };
 
             // log warn
-            winston.logger.warn(
+            winston.logger.info(
                 `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
             );
 
-        })
+            return res.status(200).json(result)
 
-        return res.status(200).send(result);
+        })
 
     } catch (error) {
         // create log
@@ -311,7 +327,7 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
     try {
-        
+
         uniqueCode = helper.getUniqueCode()
 
         let {
@@ -332,7 +348,7 @@ exports.update = async (req, res) => {
         const err = validationResult(req, res);
         if (!err.isEmpty()) {
             result = {
-                code: "01",
+                code: "99",
                 message: err.errors[0].msg,
                 data: {},
             };
@@ -345,28 +361,11 @@ exports.update = async (req, res) => {
             return res.status(200).json(result);
         }
 
-        if (moment(body.d_project_start).isSameOrAfter(body.d_project_end)) {
-        
-            if(req.file) await unlinkAsync(req.file.path)
-            result = {
-                code: "01",
-                message: "d_project_start must before d_project_end",
-                data: {},
-            };
-
-            // log warn
-            winston.logger.warn(
-                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
-            );
-
-            return res.status(200).json(result);
-        }
-
         let oldData = await model.find(db, req.params.code)
         if(!oldData){
             if(req.file) await unlinkAsync(req.file.path)
             result = {
-                code: "01",
+                code: "02",
                 message: "Project undefined ! ",
                 data: {},
             };
@@ -377,6 +376,23 @@ exports.update = async (req, res) => {
             );
 
             return res.status(200).send(result);
+        }
+
+        if (moment(body.d_project_start).isSameOrAfter(body.d_project_end)) {
+        
+            if(req.file) await unlinkAsync(req.file.path)
+            result = {
+                code: "03",
+                message: "d_project_start must before d_project_end",
+                data: {},
+            };
+
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).json(result);
         }
 
         if (req.file) {
@@ -393,7 +409,23 @@ exports.update = async (req, res) => {
         }
         
         await db.transaction(async trx => {
-            const create = await model.update(trx, body, payload, req.params.code)
+
+            const update = await model.update(trx, body, payload, req.params.code)
+            if(!update){
+                result = {
+                    code: "01",
+                    message: "Failed.",
+                    data: {},
+                };
+
+                // log info
+                winston.logger.warn(
+                    `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
+                );
+
+                return res.status(200).json(result);
+            }
+
             result = {
                 code: "00",
                 message: "Success",
@@ -404,9 +436,10 @@ exports.update = async (req, res) => {
             winston.logger.info(
                 `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
             );
-        })
 
-        return res.status(200).send(result);
+            return res.status(200).send(result);
+
+        })
 
 
     } catch (error) {
@@ -427,14 +460,19 @@ exports.update = async (req, res) => {
     }
 }
 
-exports.deleteUser = async (req, res) => {
+exports.delete = async (req, res) => {
     try {
 
         uniqueCode = helper.getUniqueCode()
 
+        const payload = {
+            user_code: req.code,
+            user_name: req.name
+        }
+
         // log info
         winston.logger.info(
-            `${uniqueCode} REQUEST delete user  : ${JSON.stringify(req.body)}`
+            `${uniqueCode} REQUEST delete project : ${JSON.stringify(req.body)}`
         );
 
         // check validator
@@ -448,17 +486,11 @@ exports.deleteUser = async (req, res) => {
 
             // log warn
             winston.logger.warn(
-                `${uniqueCode} RESPONSE delete user: ${JSON.stringify(result)}`
+                `${uniqueCode} RESPONSE delete project : ${JSON.stringify(result)}`
             );
 
             return res.status(200).send(result);
         }
-
-        const payload = {
-            user_code: req.code,
-            user_name: req.name
-        }
-
 
         await db.transaction(async trx => { 
 
@@ -489,9 +521,10 @@ exports.deleteUser = async (req, res) => {
                 `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
             );
 
+            return res.status(200).send(result);
+
         })
 
-        return res.status(200).send(result);
 
     } catch (error) {
         // create log

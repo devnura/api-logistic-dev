@@ -77,7 +77,7 @@ const create = async (trx, body, payload) => {
       "c_created_by" : payload.user_code ,
       "n_created_by" : payload.user_name ,
   },["c_project_number"])
-  return result
+  return result[0]
 } 
 
 const update = async (trx, body, payload, code) => {
