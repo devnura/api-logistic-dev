@@ -199,7 +199,6 @@ exports.find = async (req, res) => {
 }
 
 exports.create = async (req, res) => {
-    const trx = await db.transaction();
     try {
 
         uniqueCode = helper.getUniqueCode()
@@ -219,7 +218,6 @@ exports.create = async (req, res) => {
         );
 
         if (!req.file) {
-            trx.rollback();
             result = {
                 code: "400",
                 message: "Please Upload a PDF !",
@@ -229,15 +227,15 @@ exports.create = async (req, res) => {
             // log warn
             winston.logger.warn(
                 `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
-            );
+            )
 
-            return res.status(200).send(result);
+            return res.status(200).send(result)
+
           }
 
         // check validator
         const err = validationResult(req, res);
         if (!err.isEmpty()) {
-            trx.rollback();
             await unlinkAsync(req.file.path)
             result = {
                 code: "400",
@@ -254,7 +252,6 @@ exports.create = async (req, res) => {
         }
 
         if (moment(body.d_project_start).isSameOrAfter(body.d_project_end)) {
-            trx.rollback();
             await unlinkAsync(req.file.path)
             result = {
                 code: "400",
@@ -270,34 +267,34 @@ exports.create = async (req, res) => {
             return res.status(200).json(result);
         }
 
-        let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
+        await db.transaction(async trx => {
+            let code = await model.generateProjectCode(trx, moment(body.d_project_date).format("YYMMDD"))
+            let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
 
-        let code = await model.generateProjectCode(trx, moment(body.d_project_date).format("YYMMDD"))
+            body = {...req.body, ...{
+                c_doc_project_url: file_url,
+                c_project_number: code
+            }}
 
-        body = {...req.body, ...{
-            c_doc_project_url: file_url,
-            c_project_number: code
-        }}
+            const create = await model.create(trx, body, payload)
+            result = {
+                code: "400",
+                message: "Success",
+                data: create? create : {},
+            };
 
-        const create = await model.create(trx, body, payload)
-        result = {
-            code: "400",
-            message: "Success",
-            data: create? create : {},
-        };
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
+            );
 
-        // log warn
-        winston.logger.warn(
-            `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
-        );
-        await trx.commit()
+        })
+
         return res.status(200).send(result);
 
     } catch (error) {
         // create log
-
         await unlinkAsync(req.file.path)
-        await trx.rollback();
 
         winston.logger.error(
             `500 internal server error - backend server | ${error.message}`
@@ -313,9 +310,8 @@ exports.create = async (req, res) => {
 }
 
 exports.update = async (req, res) => {
-    const trx = {};
     try {
-        trx = await db.transaction()
+        
         uniqueCode = helper.getUniqueCode()
 
         let {
@@ -348,9 +344,9 @@ exports.update = async (req, res) => {
 
             return res.status(200).json(result);
         }
-        console.log(1)
+
         if (moment(body.d_project_start).isSameOrAfter(body.d_project_end)) {
-            await trx.rollback();
+        
             if(req.file) await unlinkAsync(req.file.path)
             result = {
                 code: "01",
@@ -365,10 +361,9 @@ exports.update = async (req, res) => {
 
             return res.status(200).json(result);
         }
-        console.log(1)
-        let oldData = await model.find(trx, req.params.code)
+
+        let oldData = await model.find(db, req.params.code)
         if(!oldData){
-            await trx.rollback();
             if(req.file) await unlinkAsync(req.file.path)
             result = {
                 code: "01",
@@ -381,42 +376,42 @@ exports.update = async (req, res) => {
                 `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
             );
 
-            return res.status(200).json(result);
+            return res.status(200).send(result);
         }
-        console.log(1)
+
         if (req.file) {
             // remove old file
-            console.log(process.cwd())
             let oldFile = oldData.c_doc_project_url.split("/").splice(-4).join("/")
             await unlinkAsync(`${process.cwd()}/${oldFile}`)
-            // C:\Users\user\Documents\GitHub\api-logistic-dev\public\uploads\pdf\1662022757817-c201db7f.pdf
-            // upload new file
+
+            // new file
             let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
             body = {...req.body, ...{
                 c_doc_project_url: file_url
             }}
 
         }
+        
+        await db.transaction(async trx => {
+            const create = await model.update(trx, body, payload, req.params.code)
+            result = {
+                code: "00",
+                message: "Success",
+                data: create ? create : {},
+            };
+    
+            // log warn
+            winston.logger.info(
+                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
+            );
+        })
 
-        const create = await model.update(trx, body, payload, req.params.code)
-        result = {
-            code: "00",
-            message: "Success",
-            data: create? create : {},
-        };
-
-        // log warn
-        winston.logger.warn(
-            `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
-        );
-        await trx.commit()
         return res.status(200).send(result);
 
 
     } catch (error) {
 
-        await trx.rollback();
-        await unlinkAsync(req.file.path)
+        if(req.file) await unlinkAsync(req.file.path)
         // create log
         winston.logger.error(
             `500 internal server error - backend server | ${error.message}`
@@ -428,6 +423,7 @@ exports.update = async (req, res) => {
                 error.message : "500 internal server error - backend server.",
             data: {},
         });
+
     }
 }
 
