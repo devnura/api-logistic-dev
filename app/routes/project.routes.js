@@ -34,10 +34,10 @@ router.put(
   controller.update
 );
 
-// router.delete(
-//   "/:code",
-//   auth.authenticateToken,
-//   controller.deleteUser
-// );
+router.delete(
+  "/:code",
+  auth.authenticateToken,
+  controller.delete
+);
 
 module.exports = router;

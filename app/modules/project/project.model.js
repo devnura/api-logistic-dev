@@ -130,10 +130,16 @@ const generateProjectCode = async (trx, projectDate) => {
 
 }
 
+const getPurchaseOrder = async (trx, code) => {
+  const result = await trx.select(["c_po_number"]).where("c_project_number", code).whereNot('c_status', 'X').first()
+  return result
+}
+
 module.exports = {
     findAll,
     find,
     create,
     update,
-    generateProjectCode
+    generateProjectCode,
+    getPurchaseOrder
 };

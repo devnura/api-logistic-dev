@@ -27,7 +27,6 @@ const authenticateRefreshToken = (req, res, next) => {
   }
 
   jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET, verifyOptions, (err, data) => {
-    console.log(err)
     if (err) {
       return res.json({
         code: "400",

@@ -264,7 +264,7 @@ exports.create = async (req, res) => {
                 `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
             );
 
-            return res.status(200).json(result);
+            return res.status(200).send(result);
         }
 
         await db.transaction(async trx => {
@@ -279,6 +279,7 @@ exports.create = async (req, res) => {
 
             const create = await model.create(trx, body, payload)
             if (!create) {
+                await trx.rollback()
                 result = {
                     code: "01",
                     message: "Failed.",
@@ -290,7 +291,7 @@ exports.create = async (req, res) => {
                     `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
                 );
 
-                return res.status(200).json(result);
+                return res.status(200).send(result);
             }
 
             result = {
@@ -303,8 +304,8 @@ exports.create = async (req, res) => {
             winston.logger.info(
                 `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
             );
-
-            return res.status(200).json(result)
+            
+            return res.status(200).send(result)
 
         })
 
@@ -412,6 +413,7 @@ exports.update = async (req, res) => {
 
             const update = await model.update(trx, body, payload, req.params.code)
             if(!update){
+                await trx.rollback()
                 result = {
                     code: "01",
                     message: "Failed.",
@@ -440,7 +442,6 @@ exports.update = async (req, res) => {
             return res.status(200).send(result);
 
         })
-
 
     } catch (error) {
 
@@ -479,7 +480,7 @@ exports.delete = async (req, res) => {
         const err = validationResult(req, res);
         if (!err.isEmpty()) {
             result = {
-                code: "400",
+                code: "99",
                 message: err.errors[0].msg,
                 data: {},
             };
@@ -492,10 +493,27 @@ exports.delete = async (req, res) => {
             return res.status(200).send(result);
         }
 
-        await db.transaction(async trx => { 
+        await db.transaction(async trx => {
 
-            const deleteUser = await model.deleteUser(req.params.code, payload, trx)
-            if (!deleteUser) {
+            // check if project have a transaction
+            const purchaseOrder = await model.getPurchaseOrder(trx, req.params.code)
+            if(purchaseOrder){
+                result = {
+                    code: "02",
+                    message: "Can not peform this operation, there is already active transaction in this project",
+                    data: {},
+                };
+
+                // log warn
+                winston.logger.warn(
+                    `${uniqueCode} RESPONSE delete project : ${JSON.stringify(result)}`
+                );
+
+                return res.status(200).send(result);
+            }
+
+            const deleteProject = await model.deleteProject(req.params.code, payload, trx)
+            if (!deleteProject) {
                 result = {
                     code: "01",
                     message: "Failed.",
@@ -513,7 +531,7 @@ exports.delete = async (req, res) => {
             result = {
                 code: "00",
                 message: "Success.",
-                data: deleteUser,
+                data: deleteProject,
             };
 
             // log info
