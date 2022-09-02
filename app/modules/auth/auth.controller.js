@@ -119,7 +119,7 @@ const loginUser = async (req, res) => {
       accessToken = jwt.generateAccessToken({
         code: helper.encryptText(checkUser.c_code),
         group: helper.encryptText(checkUser.c_group_code),
-        name: helper.encryptText(`${checkUser.c_first_name}${checkUser.c_last_name ? checkUser.c_last_name : ""}`),
+        name: helper.encryptText(`${checkUser.c_first_name} ${checkUser.c_last_name ? checkUser.c_last_name : ""}`),
       });
 
       // log debug
