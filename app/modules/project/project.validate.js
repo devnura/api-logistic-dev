@@ -102,7 +102,7 @@ exports.rules = (method) => {
                 .isISO8601().withMessage('invalid d_project_end format YYYY-MM-DD !').escape().trim(),
             ]
         
-        case "createe":
+        case "table":
 
                 return [
                     check('page').exists().withMessage('page is required!')

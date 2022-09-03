@@ -16,7 +16,7 @@ router.get(
 router.get(
   "/table",
   auth.authenticateToken,
-  validator.rules('createe'),
+  validator.rules('table'),
   validator.validate,
   controller.table
 );
