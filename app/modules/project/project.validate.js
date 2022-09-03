@@ -1,20 +1,13 @@
 const {
     body,
-    validationResult
+    validationResult,
+    check
 } = require('express-validator')
 const winston = require("../../helpers/winston.logger")
 const helper = require('../../helpers/helper')
 
 exports.rules = (method) => {
     switch (method) {
-        case "teble":
-            return [
-                body('page').if().withMessage('c_project_name is required!')
-                .isLength({
-                    max: 64
-                }).withMessage('c_project_name is out of length!'),
-
-            ]
         case "create":
             return [
                 body('c_project_name').notEmpty().withMessage('c_project_name is required!')
@@ -79,6 +72,21 @@ exports.rules = (method) => {
                 .isISO8601().withMessage('invalid d_project_end format YYYY-MM-DD !').escape().trim(),
             ]
         
+        case "createe":
+
+                return [
+                    check('page').exists().withMessage('page is required!')
+                    .isNumeric().withMessage('page must number')
+                    .isLength({
+                        max: 8
+                    }).withMessage('limit is out of length!').escape().trim().toInt(),
+                    check('limit').exists().withMessage('limit is required!')
+                    .isNumeric().withMessage('limit must number')
+                    .isLength({
+                        max: 8
+                    }).withMessage('limit is out of length!').escape().trim().toInt(),
+                ]
+                
         default: 
             return []
         break;
@@ -105,7 +113,7 @@ exports.validate = async (req, res, next) => {
         return res.status(200).json(result);
     }
 
-    req.requestId = requestId()
+    req.requestId = requestId
 
     next()
 }

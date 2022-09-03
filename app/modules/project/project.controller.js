@@ -1,11 +1,4 @@
-const {
-    body,
-    validationResult,
-    check
-} = require('express-validator')
-
 const db = require("../../../infrastructure/database/knex");
-
 const helper = require("../../helpers/helper");
 const winston = require("../../helpers/winston.logger");
 const model = require("./project.model");
@@ -34,21 +27,27 @@ exports.getAll = async (req, res) => {
         // log debug
         winston.logger.debug(`${uniqueCode} getting projects...`);
         
-        const table = {
+        const params = {
             page: req.query.page || 1,
             limit: req.query.limit || 10,
             keyword: req.query.keyword || "",
         }
         // check data login
-        let getUsers = await model.findAll(db)
-
+        let getUsers = await model.findAll(db, params)
+        let data = {
+            "totalItems": 0,
+            "rows": [],
+            "totalPages": 1,
+            "currentPage": 1
+        }
+        
         // log debug
         winston.logger.debug(`${uniqueCode} result projects : ${JSON.stringify(getUsers)}`);
 
         result = {
             code: "00",
             message: "Success.",
-            data: table,
+            data: getUsers,
         }; 
 
         // log info

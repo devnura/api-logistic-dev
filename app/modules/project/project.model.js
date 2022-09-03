@@ -1,4 +1,5 @@
-const findAll = async (trx) => {
+const findAll = async (trx, params) => {
+  // let searchCriteria = {}
     let result = await trx
       .select(
         "tdp.c_project_number",
@@ -23,8 +24,21 @@ const findAll = async (trx) => {
         trx.raw("TO_CHAR(tdp.d_deleted_at, 'YYYY-MM-DD HH:mm:SS') AS d_deleted_at"),
       )
       .from('trx.t_d_project AS tdp')
-      .orderBy("tdp.c_project_number", "DESC")
-  
+      .whereRaw("1+1 = 2")
+      .where((qb) => {
+        console.log(params.keyword)
+        if (params.keyword) {
+          qb.orWhere("c_project_number", "ilike", `%${params.keyword}%`)
+          qb.orWhere("c_project_name", "ilike", `%${params.keyword}%`)
+          qb.orWhere("c_project_manager_code", "ilike", `%${params.keyword}%`)
+          qb.orWhere("c_project_manager_name", "ilike", `%${params.keyword}%`)
+          qb.orWhere("c_doc_project_number", "ilike", `%${params.keyword}%`)
+          qb.orWhere("c_doc_contract_number", "ilike", `%${params.keyword}%`)
+          qb.orWhere("c_doc_spdb_number", "ilike", `%${params.keyword}%`)
+        }
+
+      }).paginate({ perPage: 2, currentPage: 1 })
+
     return result;
   };
 
