@@ -119,7 +119,6 @@ const deleteProject = async (trx, params, payload) => {
     "c_project_number": params
   })
   .whereNot("c_status", 'X')
-  console.log("return : ", rows)
   return rows
 }
 

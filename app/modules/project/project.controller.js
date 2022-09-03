@@ -147,6 +147,7 @@ exports.find = async (req, res) => {
         let {
             code
         } = req.params
+
         // log debug
         winston.logger.debug(`${uniqueCode} getting user : ${code}`);
 
@@ -431,7 +432,7 @@ exports.update = async (req, res) => {
             result = {
                 code: "00",
                 message: "Success",
-                data: create ? create : {},
+                data: update ? update : {},
             };
     
             // log warn
@@ -513,7 +514,7 @@ exports.delete = async (req, res) => {
             }
 
             const deleteProject = await model.deleteProject(trx, req.params.code, payload)
-            console.log("ABC : ",deleteProject)
+
             if (!deleteProject) {
                 result = {
                     code: "01",
