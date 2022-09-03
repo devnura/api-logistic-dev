@@ -15,7 +15,7 @@ const unlinkAsync = promisify(fs.unlink)
 var result = {};
 var uniqueCode;
 
-exports.getAll = async (req, res) => {
+exports.table = async (req, res) => {
     try {
           
         uniqueCode = req.requestId
@@ -33,13 +33,7 @@ exports.getAll = async (req, res) => {
             keyword: req.query.keyword || "",
         }
         // check data login
-        let getUsers = await model.findAll(db, params)
-        let data = {
-            "totalItems": 0,
-            "rows": [],
-            "totalPages": 1,
-            "currentPage": 1
-        }
+        let getUsers = await model.table(db, params)
         
         // log debug
         winston.logger.debug(`${uniqueCode} result projects : ${JSON.stringify(getUsers)}`);
@@ -48,6 +42,52 @@ exports.getAll = async (req, res) => {
             code: "00",
             message: "Success.",
             data: getUsers,
+        }; 
+
+        // log info
+        winston.logger.info(
+            `${uniqueCode} RESPONSE get projects : ${JSON.stringify(result)}`
+        );
+
+        return res.status(200).send(result);
+
+    } catch (error) {
+        // create log
+        winston.logger.error(
+            `500 internal server error - backend server | ${error.message}`
+        );
+
+        return res.status(200).json({
+            code: "500",
+            message: process.env.NODE_ENV != "production" ?
+                error.message : "500 internal server error - backend server.",
+            data: {},
+        });
+    }
+};
+
+exports.list = async (req, res) => {
+    try {
+          
+        uniqueCode = req.requestId
+
+        // log info
+        winston.logger.info(
+            `${uniqueCode} REQUEST get projects : ${JSON.stringify(req.body)}`
+        );
+        // log debug
+        winston.logger.debug(`${uniqueCode} getting projects...`);
+
+        // check data login
+        let projectList = await model.list(db)
+   
+        // log debug
+        winston.logger.debug(`${uniqueCode} result projects : ${JSON.stringify(projectList)}`);
+
+        result = {
+            code: "00",
+            message: "Success.",
+            data: projectList,
         }; 
 
         // log info

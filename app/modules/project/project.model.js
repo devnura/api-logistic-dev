@@ -1,4 +1,4 @@
-const findAll = async (trx, params) => {
+const table = async (trx, params) => {
   // let searchCriteria = {}
     let result = await trx
       .select(
@@ -40,6 +40,18 @@ const findAll = async (trx, params) => {
         }
 
       }).paginate({ perPage: params.limit, currentPage: params.page })
+
+    return result;
+  };
+
+const list = async (trx) => {
+  // let searchCriteria = {}
+    let result = await trx
+      .select(
+        "tdp.c_project_number",
+        "tdp.c_project_name",
+      )
+      .from('trx.t_d_project AS tdp')
 
     return result;
   };
@@ -204,7 +216,8 @@ const getPurchaseOrder = async (trx, code) => {
 }
 
 module.exports = {
-    findAll,
+    table,
+    list,
     find,
     create,
     update,

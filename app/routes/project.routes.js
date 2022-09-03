@@ -7,11 +7,18 @@ const validator = require("../modules/project/project.validate");
 // ============================== USER ==============================
 
 router.get(
-  "/",
+  "/list",
+  auth.authenticateToken,
+  validator.validate,
+  controller.list
+);
+
+router.get(
+  "/table",
   auth.authenticateToken,
   validator.rules('createe'),
   validator.validate,
-  controller.getAll
+  controller.table
 );
 
 router.get(

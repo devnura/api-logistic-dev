@@ -25,6 +25,21 @@ exports.rules = (method) => {
                     max: 32
                 }).withMessage('c_project_manager_name is out of length!').escape().trim().toUpperCase(),
 
+                body('c_doc_project_number').notEmpty().withMessage('c_doc_project_number is required!')
+                .isLength({
+                    max: 64
+                }).withMessage('c_doc_project_number is out of length!').escape().trim().toUpperCase(),
+
+                body('c_doc_contract_number').notEmpty().withMessage('c_doc_contract_number is required!')
+                .isLength({
+                    max: 64
+                }).withMessage('c_doc_contract_number is out of length!').escape().trim().toUpperCase(),
+
+                body('c_doc_spdb_number').notEmpty().withMessage('c_doc_spdb_number is required!')
+                .isLength({
+                    max: 64
+                }).withMessage('c_doc_spdb_number is out of length!').escape().trim().toUpperCase(),
+
                 body('c_note').exists().withMessage('c_note is required!')
                 .isLength({
                     max: 32
@@ -56,6 +71,21 @@ exports.rules = (method) => {
                 .isLength({
                     max: 32
                 }).withMessage('c_project_manager_name is out of length!').escape().trim().toUpperCase(),
+                
+                body('c_doc_project_number').notEmpty().withMessage('c_doc_project_number is required!')
+                .isLength({
+                    max: 64
+                }).withMessage('c_doc_project_number is out of length!').escape().trim().toUpperCase(),
+
+                body('c_doc_contract_number').notEmpty().withMessage('c_doc_contract_number is required!')
+                .isLength({
+                    max: 64
+                }).withMessage('c_doc_contract_number is out of length!').escape().trim().toUpperCase(),
+
+                body('c_doc_spdb_number').notEmpty().withMessage('c_doc_spdb_number is required!')
+                .isLength({
+                    max: 64
+                }).withMessage('c_doc_spdb_number is out of length!').escape().trim().toUpperCase(),
 
                 body('c_note').exists().withMessage('c_note is required!')
                 .isLength({
