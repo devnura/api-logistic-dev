@@ -3,12 +3,14 @@ const router = express.Router();
 const auth = require("../middleware/jwt.middleware");
 const controller = require("../modules/project/project.controller");
 const multer = require('../middleware/multer.middleware')
-
+const validator = require("../modules/project/project.validate");
 // ============================== USER ==============================
 
 router.get(
   "/",
   auth.authenticateToken,
+  validator.rules('table'),
+  validator.validate,
   controller.getAll
 );
 
@@ -21,17 +23,31 @@ router.get(
 router.post(
   "/",
   auth.authenticateToken,
+  validator.rules('create'),
+  validator.validate,
   multer.uploadPDF,
-  controller.validate('create'),
   controller.create
 );
 
 router.put(
   "/:code",
   auth.authenticateToken,
+  validator.rules('update'),
+  validator.validate,
   multer.uploadPDF,
-  controller.validate('update'),
   controller.update
+);
+
+router.put(
+  "/onprogress/:code",
+  auth.authenticateToken,
+  controller.onProgres
+);
+
+router.put(
+  "/complete/:code",
+  auth.authenticateToken,
+  controller.complete
 );
 
 router.delete(

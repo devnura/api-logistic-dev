@@ -22,105 +22,38 @@ const unlinkAsync = promisify(fs.unlink)
 var result = {};
 var uniqueCode;
 
-// VALIDATION
-exports.validate = (method) => {
-    switch (method) {
-        case "create":
-            return [
-                body('c_project_name').notEmpty().withMessage('c_project_name is required!')
-                .isLength({
-                    max: 64
-                }).withMessage('c_project_name is out of length!'),
-
-                body('c_project_manager_code').notEmpty().withMessage('c_project_manager_code is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_project_manager_code is out of length!'),
-
-                body('c_project_manager_name').notEmpty().withMessage('c_project_manager_name is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_project_manager_name is out of length!'),
-
-                body('c_note').exists().withMessage('c_note is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_note is out of length!'),
-
-                body('d_project_date').notEmpty().withMessage('d_project_date is required!')
-                .isISO8601().withMessage('invalid d_project_start format YYYY-MM-DD !').escape().trim(),
-
-                body('d_project_start').notEmpty().withMessage('d_project_start is required!')
-                .isISO8601().withMessage('invalid d_project_start format YYYY-MM-DD !').escape().trim(),
-
-                body('d_project_end').notEmpty().withMessage('d_project_end is required!')
-                .isISO8601().withMessage('invalid d_project_end format YYYY-MM-DD !').escape().trim(),
-            ]
-
-        case "update":
-            return [
-                body('c_project_name').notEmpty().withMessage('c_project_name is required!')
-                .isLength({
-                    max: 64
-                }).withMessage('c_project_name is out of length!'),
-
-                body('c_project_manager_code').notEmpty().withMessage('c_project_manager_code is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_project_manager_code is out of length!'),
-
-                body('c_project_manager_name').notEmpty().withMessage('c_project_manager_name is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_project_manager_name is out of length!'),
-
-                body('c_note').exists().withMessage('c_note is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_note is out of length!'),
-
-                body('d_project_date').notEmpty().withMessage('d_project_date is required!')
-                .isISO8601().withMessage('invalid d_project_start format YYYY-MM-DD !').escape().trim(),
-
-                body('d_project_start').notEmpty().withMessage('d_project_start is required!')
-                .isISO8601().withMessage('invalid d_project_start format YYYY-MM-DD !').escape().trim(),
-
-                body('d_project_end').notEmpty().withMessage('d_project_end is required!')
-                .isISO8601().withMessage('invalid d_project_end format YYYY-MM-DD !').escape().trim(),
-            ]
-    
-        default:
-        break;
-    }
-};
-
 exports.getAll = async (req, res) => {
     try {
           
-        uniqueCode = helper.getUniqueCode()
+        uniqueCode = req.requestId
 
         // log info
         winston.logger.info(
             `${uniqueCode} REQUEST get projects : ${JSON.stringify(req.body)}`
         );
         // log debug
-        winston.logger.debug(`${uniqueCode} getting users...`);
-
+        winston.logger.debug(`${uniqueCode} getting projects...`);
+        
+        const table = {
+            page: req.query.page || 1,
+            limit: req.query.limit || 10,
+            keyword: req.query.keyword || "",
+        }
         // check data login
         let getUsers = await model.findAll(db)
 
         // log debug
-        winston.logger.debug(`${uniqueCode} result users : ${JSON.stringify(getUsers)}`);
+        winston.logger.debug(`${uniqueCode} result projects : ${JSON.stringify(getUsers)}`);
 
         result = {
             code: "00",
             message: "Success.",
-            data: getUsers,
+            data: table,
         }; 
 
         // log info
         winston.logger.info(
-            `${uniqueCode} RESPONSE get users : ${JSON.stringify(result)}`
+            `${uniqueCode} RESPONSE get projects : ${JSON.stringify(result)}`
         );
 
         return res.status(200).send(result);
@@ -143,7 +76,8 @@ exports.getAll = async (req, res) => {
 exports.find = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
+        uniqueCode = req.requestId
+
         let {
             code
         } = req.params
@@ -202,7 +136,7 @@ exports.find = async (req, res) => {
 exports.create = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
+        uniqueCode = req.requestId
 
         let {
             body
@@ -232,24 +166,6 @@ exports.create = async (req, res) => {
 
             return res.status(200).send(result)
 
-        }
-
-        // check validator
-        const err = validationResult(req, res);
-        if (!err.isEmpty()) {
-            await unlinkAsync(req.file.path)
-            result = {
-                code: "99",
-                message: err.errors[0].msg,
-                data: {},
-            };
-
-            // log warn
-            winston.logger.warn(
-                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
-            );
-
-            return res.status(200).send(result);
         }
 
         if (moment(body.d_project_start).isSameOrAfter(body.d_project_end)) {
@@ -330,7 +246,7 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
+        uniqueCode = req.requestId
 
         let {
             body
@@ -345,23 +261,6 @@ exports.update = async (req, res) => {
         winston.logger.info(
             `${uniqueCode} REQUEST update project  : ${JSON.stringify(req.body)}`
         );
-
-        // check validator
-        const err = validationResult(req, res);
-        if (!err.isEmpty()) {
-            result = {
-                code: "99",
-                message: err.errors[0].msg,
-                data: {},
-            };
-
-            // log warn
-            winston.logger.warn(
-                `${uniqueCode} RESPONSE update user : ${JSON.stringify(result)}`
-            );
-
-            return res.status(200).json(result);
-        }
 
         let oldData = await model.find(db, req.params.code)
         if(!oldData){
@@ -465,7 +364,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
+        uniqueCode = uniqueCode = req.requestId
 
         const payload = {
             user_code: req.code,
@@ -476,23 +375,6 @@ exports.delete = async (req, res) => {
         winston.logger.info(
             `${uniqueCode} REQUEST delete project : ${JSON.stringify(req.body)}`
         );
-
-        // check validator
-        const err = validationResult(req, res);
-        if (!err.isEmpty()) {
-            result = {
-                code: "99",
-                message: err.errors[0].msg,
-                data: {},
-            };
-
-            // log warn
-            winston.logger.warn(
-                `${uniqueCode} RESPONSE delete project : ${JSON.stringify(result)}`
-            );
-
-            return res.status(200).send(result);
-        }
 
         await db.transaction(async trx => {
 
@@ -561,67 +443,25 @@ exports.delete = async (req, res) => {
     }
 }
 
-exports.resetPassword = async (req, res) => {
+exports.onProgres = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
-
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST reset password  : ${JSON.stringify(req.body)}`
-        );
-
-        // check validator
-        const err = validationResult(req, res);
-        if (!err.isEmpty()) {
-            result = {
-                code: "400",
-                message: err.errors[0].msg,
-                data: {},
-            };
-
-            // log warn
-            winston.logger.warn(
-                `${uniqueCode} RESPONSE reset password : ${JSON.stringify(result)}`
-            );
-
-            return res.status(200).send(result);
-        }
-
-        let {
-            body
-        } = req
+        uniqueCode = req.requestId
 
         const payload = {
             user_code: req.code,
             user_name: req.name
         }
 
-        let knowingPassword = ""
+        // log info
+        winston.logger.info(
+            `${uniqueCode} REQUEST on progress project : ${JSON.stringify(req.body)}`
+        );
 
-        if(body.reset){
-            knowingPassword = helper.getRandomStrig()
-        }else {
-            knowingPassword = body.c_password
-        }
-         
-        // encrypt password
-        const saltRounds = 10;
-        let salt = bcrypt.genSaltSync(saltRounds);
-        let passwordHash = bcrypt.hashSync(knowingPassword, salt)
+        await db.transaction(async trx => {
 
-        body = {
-            ...body,
-            ...{
-                knowingPassword : body.reset ? knowingPassword : null,
-                passwordHash: passwordHash,
-            }
-        }
-
-        await db.transaction(async trx => { 
-
-            const resetPassword = await model.resetPassword(req.params.code, body, payload, trx)
-            if (!resetPassword) {
+            const progress  = await model.setOnProgress(trx, req.params.code, payload)
+            if (!progress) {
                 result = {
                     code: "01",
                     message: "Failed.",
@@ -630,7 +470,7 @@ exports.resetPassword = async (req, res) => {
 
                 // log info
                 winston.logger.info(
-                    `${uniqueCode} RESPONSE reset password : ${JSON.stringify(result)}`
+                    `${uniqueCode} RESPONSE on progress user : ${JSON.stringify(result)}`
                 );
 
                 return res.status(200).send(result);
@@ -639,17 +479,146 @@ exports.resetPassword = async (req, res) => {
             result = {
                 code: "00",
                 message: "Success.",
-                data: resetPassword,
+                data: progress,
             };
 
             // log info
             winston.logger.info(
-                `${uniqueCode} RESPONSE reset password : ${JSON.stringify(result)}`
+                `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
             );
+
+            return res.status(200).send(result);
 
         })
 
-        return res.status(200).send(result);
+
+    } catch (error) {
+        // create log
+        winston.logger.error(
+            `500 internal server error - backend server | ${error.message}`
+        );
+
+        return res.status(200).json({
+            code: "500",
+            message: process.env.NODE_ENV != "production" ?
+                error.message : "500 internal server error - backend server.",
+            data: {},
+        });
+    }
+}
+
+exports.complete = async (req, res) => {
+    try {
+
+        uniqueCode = req.requestId
+
+        const payload = {
+            user_code: req.code,
+            user_name: req.name
+        }
+
+        // log info
+        winston.logger.info(
+            `${uniqueCode} REQUEST complete project : ${JSON.stringify(req.body)}`
+        );
+
+        await db.transaction(async trx => {
+
+            const complete  = await model.setComlplete(trx, req.params.code, payload)
+            if (!complete) {
+                result = {
+                    code: "01",
+                    message: "Failed.",
+                    data: {},
+                };
+
+                // log info
+                winston.logger.info(
+                    `${uniqueCode} RESPONSE complete project : ${JSON.stringify(result)}`
+                );
+
+                return res.status(200).send(result);
+            }
+
+            result = {
+                code: "00",
+                message: "Success.",
+                data: complete,
+            };
+
+            // log info
+            winston.logger.info(
+                `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).send(result);
+
+        })
+
+
+    } catch (error) {
+        // create log
+        winston.logger.error(
+            `500 internal server error - backend server | ${error.message}`
+        );
+
+        return res.status(200).json({
+            code: "500",
+            message: process.env.NODE_ENV != "production" ?
+                error.message : "500 internal server error - backend server.",
+            data: {},
+        });
+    }
+}
+
+exports.voidToOnProgress = async (req, res) => {
+    try {
+
+        uniqueCode = req.requestId
+
+        const payload = {
+            user_code: req.code,
+            user_name: req.name
+        }
+
+        // log info
+        winston.logger.info(
+            `${uniqueCode} REQUEST void to on progress project : ${JSON.stringify(req.body)}`
+        );
+
+        await db.transaction(async trx => {
+
+            const complete  = await model.setOnProgress(trx, req.params.code, payload)
+            if (!complete) {
+                result = {
+                    code: "01",
+                    message: "Failed.",
+                    data: {},
+                };
+
+                // log info
+                winston.logger.info(
+                    `${uniqueCode} RESPONSE void to on progress user : ${JSON.stringify(result)}`
+                );
+
+                return res.status(200).send(result);
+            }
+
+            result = {
+                code: "00",
+                message: "Success.",
+                data: complete,
+            };
+
+            // log info
+            winston.logger.info(
+                `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).send(result);
+
+        })
+
 
     } catch (error) {
         // create log

@@ -103,11 +103,10 @@ const update = async (trx, body, payload, code) => {
   const result =  await trx("trx.t_d_project").update(dataUpdate,["c_project_number"])
   .where("c_project_number", code)
 
-  return result
+  return result[0]
 } 
 
 const deleteProject = async (trx, params, payload) => {
-  console.log(params, payload)
   let rows = await trx('trx.t_d_project').update({
     "c_status": "X",
     "c_status_name" : "DELETED",
@@ -119,7 +118,42 @@ const deleteProject = async (trx, params, payload) => {
     "c_project_number": params
   })
   .whereNot("c_status", 'X')
-  return rows
+  return rows[0]
+}
+
+const setOnProgress = async (trx, params, payload) => {
+  console.log(params, payload)
+  let rows = await trx('trx.t_d_project').update({
+    "c_status": "P",
+    "c_status_name" : "ON PROGRESS",
+    "c_updated_by" : payload.user_code,
+    "n_updated_by" : payload.user_name,
+    "d_updated_at" : trx.raw('NOW()'),
+  }, ['c_project_number'])
+  .where({
+    "c_project_number": params
+  })
+  .whereNot("c_status", 'X')
+  return rows[0]
+}
+
+const setComlplete = async (trx, params, payload) => {
+  console.log(params, payload)
+  let rows = await trx('trx.t_d_project').update({
+    "c_status": "C",
+    "c_status_name" : "COMPLETE",
+    "c_updated_by" : payload.user_code,
+    "n_updated_by" : payload.user_name,
+    "d_updated_at" : trx.raw('NOW()'),
+    "c_completed_by" : payload.user_code,
+    "n_completed_by" : payload.user_name,
+    "d_completed_at" : trx.raw('NOW()'),
+  }, ['c_project_number'])
+  .where({
+    "c_project_number": params
+  })
+  .whereNot("c_status", 'X')
+  return rows[0]
 }
 
 const generateProjectCode = async (trx, projectDate) => {
@@ -158,5 +192,7 @@ module.exports = {
     update,
     generateProjectCode,
     getPurchaseOrder,
-    deleteProject
+    deleteProject,
+    setOnProgress,
+    setComlplete
 };
