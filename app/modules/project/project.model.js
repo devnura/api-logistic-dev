@@ -39,7 +39,9 @@ const table = async (trx, params) => {
           qb.orWhere("c_doc_spdb_number", "ilike", `%${params.keyword}%`)
         }
 
-      }).paginate({ perPage: params.limit, currentPage: params.page })
+      })
+      .orderBy("c_project_number", "DESC")
+      .paginate({ perPage: params.limit, currentPage: params.page })
 
     return result;
   };
