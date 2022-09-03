@@ -144,7 +144,6 @@ const deleteProject = async (trx, params, payload) => {
 }
 
 const setOnProgress = async (trx, params, payload) => {
-  console.log(params, payload)
   let rows = await trx('trx.t_d_project').update({
     "c_status": "P",
     "c_status_name" : "ON PROGRESS",
@@ -160,7 +159,6 @@ const setOnProgress = async (trx, params, payload) => {
 }
 
 const setComlplete = async (trx, params, payload) => {
-  console.log(params, payload)
   let rows = await trx('trx.t_d_project').update({
     "c_status": "C",
     "c_status_name" : "COMPLETE",

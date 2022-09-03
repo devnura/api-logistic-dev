@@ -60,6 +60,13 @@ router.put(
   controller.complete
 );
 
+router.put(
+  "/voidtoonprogress/:code",
+  auth.authenticateToken,
+  validator.validate,
+  controller.voidToOnProgress
+);
+
 router.delete(
   "/:code",
   auth.authenticateToken,
