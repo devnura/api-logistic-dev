@@ -15,20 +15,10 @@ const table = async (trx, params) => {
         "tdp.c_note",
         "tdp.c_status",
         "tdp.c_status_name",
-        "tdp.c_created_by",
-        "tdp.n_created_by",
-        trx.raw("TO_CHAR(tdp.d_created_at, 'YYYY-MM-DD HH:mm:SS') AS d_created_at"),
-        "tdp.c_updated_by",
-        "tdp.n_updated_by",
-        trx.raw("TO_CHAR(tdp.d_updated_at, 'YYYY-MM-DD HH:mm:SS') AS d_updated_at"),
-        "tdp.c_deleted_by",
-        "tdp.n_deleted_by",
-        trx.raw("TO_CHAR(tdp.d_deleted_at, 'YYYY-MM-DD HH:mm:SS') AS d_deleted_at"),
       )
       .from('trx.t_d_project AS tdp')
       .whereRaw("1+1 = 2")
       .where((qb) => {
-        console.log(params.keyword)
         if (params.keyword) {
           qb.orWhere("c_project_number", "ilike", `%${params.keyword}%`)
           qb.orWhere("c_project_name", "ilike", `%${params.keyword}%`)

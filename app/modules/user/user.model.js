@@ -1,4 +1,54 @@
 // GET USERS
+const getTableUsers = async (trx, params) => {
+  let result = await trx
+    .select(
+      "tmu.c_code",
+      "tmu.c_group_code",
+      "tmg.c_group_name",
+      "tmu.c_email",
+      "tmu.c_knowing_password",
+      "tmu.c_first_name",
+      "tmu.c_last_name",
+      "tmu.c_phone_number",
+      "tmu.c_status",
+      "tmu.c_status_name",
+    )
+    .from('public.t_m_user as tmu')
+    .leftJoin('public.t_m_group as tmg', function () {
+      this.on('tmg.c_group_code', '=', 'tmu.c_group_code')
+    })
+    .whereRaw("1+1 = 2")
+    .where((qb) => {
+      if (params.keyword) {
+        qb.orWhere("tmu.c_code", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmu.c_group_code", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmg.c_group_name", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmu.c_first_name", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmu.c_last_name", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmu.c_phone_number", "ilike", `%${params.keyword}%`)
+      }
+
+    })
+    .orderBy("tmu.c_code", "DESC")
+    .paginate({ perPage: params.limit, currentPage: params.page })
+
+  return result;
+};
+
+const getListUsers = async (trx) => {
+  let result = await trx
+    .select(
+      "tmu.c_code",
+      "tmu.c_group_code",
+    )
+    .from('public.t_m_user as tmu')
+    .whereNot("c_status", 'X')
+    .orderBy("tmu.c_code", "DESC")
+
+  return result;
+};
+
+// GET USERS
 const getUsers = async (trx) => {
   let result = await trx
     .select(
@@ -120,7 +170,7 @@ const resetPassword = async (params, data, payload, trx) => {
     "c_status" : "A"
   })
 
-return rows
+return rows[0]
 }
 
 // DELETE USER
@@ -138,7 +188,7 @@ const deleteUser = async (params, payload, trx) => {
       "c_status": "A"
     })
 
-  return rows
+  return rows[0]
 
 }
 
@@ -190,6 +240,7 @@ const checkUpdate = async (params, data, before, trx) => {
 }
 
 module.exports = {
+  getTableUsers,
   getUsers,
   getUser,
   insertUser,
@@ -199,5 +250,6 @@ module.exports = {
   resetPassword,
   checkDuplicatedInsert,
   generateUserCode,
-  checkUpdate
+  checkUpdate,
+  getListUsers
 };

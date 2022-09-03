@@ -1,9 +1,3 @@
-const {
-    body,
-    validationResult,
-    check
-} = require('express-validator')
-
 const db = require("../../../infrastructure/database/knex");
 
 const bcrypt = require("bcrypt");
@@ -16,80 +10,22 @@ moment.locale("id");
 var result = {};
 var uniqueCode;
 
-// VALIDATION
-exports.validate = (method) => {
-    switch (method) {
-        case "createUser":
-            return [
-                body('c_first_name').notEmpty().withMessage('c_first_name harus terisi!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_firstname is out of length!'),
-                body('c_last_name').exists().withMessage('c_last_name is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_lastname is out of length!'),
-                body('c_group_code').notEmpty().withMessage('c_group_code harus terisi!')
-                .isLength({
-                    max: 8
-                }).withMessage('c_group_code is out of length!'),
-                body('c_email').notEmpty().withMessage('c_email harus terisi!').isEmail().withMessage("Invalid Email format")
-                .isLength({
-                    max: 64
-                }).withMessage('c_email is out of length!')
-            ]
-
-        case "updateUser":
-            return [
-                check("code").notEmpty().withMessage('code harus terisi!'),
-                body('c_first_name').notEmpty().withMessage('c_first_name harus terisi!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_firstname is out of length!'),
-                body('c_last_name').notEmpty().withMessage('c_last_name is required!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_lastname is out of length!'),
-                body('c_group_code').notEmpty().withMessage('c_group_code harus terisi!')
-                .isLength({
-                    max: 8
-                }).withMessage('c_group_code is out of length!'),
-                body('c_email').notEmpty().withMessage('c_email harus terisi!').isEmail().withMessage("Invalid Email format")
-                .isLength({
-                    max: 64
-                }).withMessage('c_email is out of length!')
-            ]
-
-        case "resetPassword":
-            return [
-                check("code").notEmpty().withMessage('code harus terisi!'),
-                body('c_password').exists().withMessage('c_password harus terisi!')
-                .isLength({
-                    max: 32
-                }).withMessage('c_password is out of length!'),
-                body('reset').notEmpty()
-                .isBoolean().withMessage('reset is out of length!'),
-            ]
-    
-        default:
-            break;
-    }
-};
-
-exports.getUsers = async (req, res) => {
+exports.getUsersTable = async (req, res) => {
     try {
           
-        uniqueCode = helper.getUniqueCode()
+        uniqueCode = req.requestId
 
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST get users : ${JSON.stringify(req.body)}`
-        );
         // log debug
         winston.logger.debug(`${uniqueCode} getting users...`);
 
+        const params = {
+            page: req.query.page || 1,
+            limit: req.query.limit || 10,
+            keyword: req.query.keyword || "",
+        }
+
         // check data login
-        let getUsers = await model.getUsers(db)
+        let getUsers = await model.getTableUsers(db, params)
 
         // log debug
         winston.logger.debug(`${uniqueCode} result users : ${JSON.stringify(getUsers)}`);
@@ -113,7 +49,49 @@ exports.getUsers = async (req, res) => {
             `500 internal server error - backend server | ${error.message}`
         );
 
-        return res.status(200).json({
+        return res.status(200).send({
+            code: "500",
+            message: process.env.NODE_ENV != "production" ?
+                error.message : "500 internal server error - backend server.",
+            data: {},
+        });
+    }
+};
+
+exports.getUsersList = async (req, res) => {
+    try {
+          
+        uniqueCode = req.requestId
+
+        // log debug
+        winston.logger.debug(`${uniqueCode} getting users...`);
+
+        // check data login
+        let getUsers = await model.getListUsers(db)
+
+        // log debug
+        winston.logger.debug(`${uniqueCode} result users : ${JSON.stringify(getUsers)}`);
+
+        result = {
+            code: "00",
+            message: "Success.",
+            data: getUsers,
+        }; 
+
+        // log info
+        winston.logger.info(
+            `${uniqueCode} RESPONSE get users : ${JSON.stringify(result)}`
+        );
+
+        return res.status(200).send(result);
+
+    } catch (error) {
+        // create log
+        winston.logger.error(
+            `500 internal server error - backend server | ${error.message}`
+        );
+
+        return res.status(200).send({
             code: "500",
             message: process.env.NODE_ENV != "production" ?
                 error.message : "500 internal server error - backend server.",
@@ -125,7 +103,8 @@ exports.getUsers = async (req, res) => {
 exports.getUser = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
+        uniqueCode = req.requestId
+
         let {
             code
         } = req.params
@@ -157,7 +136,7 @@ exports.getUser = async (req, res) => {
             `500 internal server error - backend server | ${error.message}`
         );
 
-        return res.status(200).json({
+        return res.status(200).send({
             code: "500",
             message: process.env.NODE_ENV != "production" ?
                 error.message : "500 internal server error - backend server.",
@@ -169,29 +148,7 @@ exports.getUser = async (req, res) => {
 exports.insertUser = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
-
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST create user  : ${JSON.stringify(req.body)}`
-        );
-
-        // check validator
-        const err = validationResult(req, res);
-        if (!err.isEmpty()) {
-            result = {
-                code: "400",
-                message: err.errors[0].msg,
-                data: {},
-            };
-
-            // log warn
-            winston.logger.warn(
-                `${uniqueCode} RESPONSE create user : ${JSON.stringify(result)}`
-            );
-
-            return res.status(200).json(result);
-        }
+        uniqueCode = req.requestId
 
         let {
             body
@@ -219,7 +176,7 @@ exports.insertUser = async (req, res) => {
                     `${uniqueCode} RESPONSE create user : ${JSON.stringify(result)}`
                 );
 
-                return res.status(200).json(result);
+                return res.status(200).send(result);
             }
 
             // log debug
@@ -272,9 +229,11 @@ exports.insertUser = async (req, res) => {
             winston.logger.info(
                 `${uniqueCode} RESPONSE create user : ${JSON.stringify(result)}`
             );
+
+            return res.status(200).send(result);
+
         })
 
-        return res.status(200).send(result);
 
     } catch (error) {
         // create log
@@ -282,7 +241,7 @@ exports.insertUser = async (req, res) => {
             `500 internal server error - backend server | ${error.message}`
         );
 
-        return res.status(200).json({
+        return res.status(200).send({
             code: "500",
             message: process.env.NODE_ENV != "production" ?
                 error.message : "500 internal server error - backend server.",
@@ -294,29 +253,12 @@ exports.insertUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
+        uniqueCode = req.requestId
 
         // log info
         winston.logger.info(
             `${uniqueCode} REQUEST update user  : ${JSON.stringify(req.body)}`
         );
-
-        // check validator
-        const err = validationResult(req, res);
-        if (!err.isEmpty()) {
-            result = {
-                code: "400",
-                message: err.errors[0].msg,
-                data: {},
-            };
-
-            // log warn
-            winston.logger.warn(
-                `${uniqueCode} RESPONSE update user : ${JSON.stringify(result)}`
-            );
-
-            return res.status(200).json(result);
-        }
 
         let {
             body
@@ -361,7 +303,7 @@ exports.updateUser = async (req, res) => {
                     `${uniqueCode} RESPONSE update user : ${JSON.stringify(result)}`
                 );
 
-                return res.status(200).json(result);
+                return res.status(200).send(result);
             }
 
             // log debug
@@ -397,9 +339,10 @@ exports.updateUser = async (req, res) => {
                 `${uniqueCode} RESPONSE create user : ${JSON.stringify(result)}`
             );
 
+            return res.status(200).send(result);
+
         })
 
-        return res.status(200).send(result);
 
     } catch (error) {
         // create log
@@ -407,7 +350,7 @@ exports.updateUser = async (req, res) => {
             `500 internal server error - backend server | ${error.message}`
         );
 
-        return res.status(200).json({
+        return res.status(200).send({
             code: "500",
             message: process.env.NODE_ENV != "production" ?
                 error.message : "500 internal server error - backend server.",
@@ -419,29 +362,7 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
-
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST delete user  : ${JSON.stringify(req.body)}`
-        );
-
-        // check validator
-        const err = validationResult(req, res);
-        if (!err.isEmpty()) {
-            result = {
-                code: "400",
-                message: err.errors[0].msg,
-                data: {},
-            };
-
-            // log warn
-            winston.logger.warn(
-                `${uniqueCode} RESPONSE delete user: ${JSON.stringify(result)}`
-            );
-
-            return res.status(200).send(result);
-        }
+        uniqueCode = req.requestId
 
         const payload = {
             user_code: req.code,
@@ -450,6 +371,23 @@ exports.deleteUser = async (req, res) => {
 
 
         await db.transaction(async trx => { 
+
+            let before = await model.getUser(req.params.code, trx)
+            if (!before) {
+
+                result = {
+                    code: "01",
+                    message: "user not found.",
+                    data: {},
+                };
+
+                // log info
+                winston.logger.info(
+                    `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
+                );
+
+                return res.status(200).send(result);
+            }
 
             const deleteUser = await model.deleteUser(req.params.code, payload, trx)
             if (!deleteUser) {
@@ -478,9 +416,10 @@ exports.deleteUser = async (req, res) => {
                 `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
             );
 
+            return res.status(200).send(result);
+
         })
 
-        return res.status(200).send(result);
 
     } catch (error) {
         // create log
@@ -488,7 +427,7 @@ exports.deleteUser = async (req, res) => {
             `500 internal server error - backend server | ${error.message}`
         );
 
-        return res.status(200).json({
+        return res.status(200).send({
             code: "500",
             message: process.env.NODE_ENV != "production" ?
                 error.message : "500 internal server error - backend server.",
@@ -500,29 +439,7 @@ exports.deleteUser = async (req, res) => {
 exports.resetPassword = async (req, res) => {
     try {
 
-        uniqueCode = helper.getUniqueCode()
-
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST reset password  : ${JSON.stringify(req.body)}`
-        );
-
-        // check validator
-        const err = validationResult(req, res);
-        if (!err.isEmpty()) {
-            result = {
-                code: "400",
-                message: err.errors[0].msg,
-                data: {},
-            };
-
-            // log warn
-            winston.logger.warn(
-                `${uniqueCode} RESPONSE reset password : ${JSON.stringify(result)}`
-            );
-
-            return res.status(200).send(result);
-        }
+        uniqueCode = req.requestId
 
         let {
             body
@@ -556,6 +473,23 @@ exports.resetPassword = async (req, res) => {
 
         await db.transaction(async trx => { 
 
+            let before = await model.getUser(req.params.code, trx)
+            if (!before) {
+
+                result = {
+                    code: "01",
+                    message: "user not found.",
+                    data: {},
+                };
+
+                // log info
+                winston.logger.info(
+                    `${uniqueCode} RESPONSE reset password : ${JSON.stringify(result)}`
+                );
+
+                return res.status(200).send(result);
+            }
+
             const resetPassword = await model.resetPassword(req.params.code, body, payload, trx)
             if (!resetPassword) {
                 result = {
@@ -583,9 +517,10 @@ exports.resetPassword = async (req, res) => {
                 `${uniqueCode} RESPONSE reset password : ${JSON.stringify(result)}`
             );
 
+            return res.status(200).send(result);
+
         })
 
-        return res.status(200).send(result);
 
     } catch (error) {
         // create log
@@ -593,7 +528,7 @@ exports.resetPassword = async (req, res) => {
             `500 internal server error - backend server | ${error.message}`
         );
 
-        return res.status(200).json({
+        return res.status(200).send({
             code: "500",
             message: process.env.NODE_ENV != "production" ?
                 error.message : "500 internal server error - backend server.",
