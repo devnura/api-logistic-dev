@@ -29,31 +29,31 @@ router.post(
   controller.create
 );
 
-// router.put(
-//   "/:code",
-//   auth.authenticateToken,
-//   validator.rules('update'),
-//   validator.validate,
-//   multer.uploadPDF,
-//   controller.update
-// );
+router.put(
+  "/:code",
+  auth.authenticateToken,
+  multer.uploadPDF,
+  validator.rules('update'),
+  validator.validate,
+  controller.update
+);
 
-// router.put(
-//   "/onprogress/:code",
-//   auth.authenticateToken,
-//   controller.onProgres
-// );
+router.put(
+  "/onprogress/:code",
+  auth.authenticateToken,
+  controller.onProgres
+);
 
-// router.put(
-//   "/complete/:code",
-//   auth.authenticateToken,
-//   controller.complete
-// );
+router.put(
+  "/complete/:code",
+  auth.authenticateToken,
+  controller.complete
+);
 
-// router.delete(
-//   "/:code",
-//   auth.authenticateToken,
-//   controller.delete
-// );
+router.delete(
+  "/:code",
+  auth.authenticateToken,
+  controller.delete
+);
 
 module.exports = router;
