@@ -37,7 +37,7 @@ const findAll = async (trx, params) => {
           qb.orWhere("c_doc_spdb_number", "ilike", `%${params.keyword}%`)
         }
 
-      }).paginate({ perPage: 2, currentPage: 1 })
+      }).paginate({ perPage: params.limit, currentPage: params.page })
 
     return result;
   };
