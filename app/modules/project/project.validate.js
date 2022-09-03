@@ -125,7 +125,11 @@ exports.rules = (method) => {
 exports.validate = async (req, res, next) => {
 
     const requestId = helper.getUniqueCode()
-
+    // log info
+    winston.logger.info(
+        `${requestId} REQUEST : ${JSON.stringify(req.body)}`
+    );
+    
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
@@ -137,7 +141,7 @@ exports.validate = async (req, res, next) => {
 
         // log warn
         winston.logger.warn(
-            `${requestId} RESPONSE create project : ${JSON.stringify(result)}`
+            `${requestId} RESPONSE : ${JSON.stringify(result)}`
         );
         
         return res.status(200).json(result);

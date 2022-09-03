@@ -20,10 +20,6 @@ exports.table = async (req, res) => {
           
         uniqueCode = req.requestId
 
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST get projects : ${JSON.stringify(req.body)}`
-        );
         // log debug
         winston.logger.debug(`${uniqueCode} getting projects...`);
         
@@ -71,10 +67,6 @@ exports.list = async (req, res) => {
           
         uniqueCode = req.requestId
 
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST get projects : ${JSON.stringify(req.body)}`
-        );
         // log debug
         winston.logger.debug(`${uniqueCode} getting projects...`);
 
@@ -186,11 +178,6 @@ exports.create = async (req, res) => {
             user_name: req.name
         }
 
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST create project  : ${JSON.stringify(req.body)}`
-        );
-
         if (!req.file) {
             result = {
                 code: "02",
@@ -295,11 +282,6 @@ exports.update = async (req, res) => {
             user_code: req.code,
             user_name: req.name
         }
-
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST update project  : ${JSON.stringify(req.body)}`
-        );
 
         let oldData = await model.find(db, req.params.code)
         if(!oldData){
@@ -409,11 +391,6 @@ exports.delete = async (req, res) => {
             user_code: req.code,
             user_name: req.name
         }
-
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST delete project : ${JSON.stringify(req.body)}`
-        );
 
         await db.transaction(async trx => {
 
@@ -619,11 +596,6 @@ exports.voidToOnProgress = async (req, res) => {
             user_code: req.code,
             user_name: req.name
         }
-
-        // log info
-        winston.logger.info(
-            `${uniqueCode} REQUEST void to on progress project : ${JSON.stringify(req.body)}`
-        );
 
         await db.transaction(async trx => {
 
