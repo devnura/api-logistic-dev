@@ -24,6 +24,7 @@ router.get(
 router.get(
   "/:code",
   auth.authenticateToken,
+  validator.validate,
   controller.find
 );
 
@@ -48,18 +49,21 @@ router.put(
 router.put(
   "/onprogress/:code",
   auth.authenticateToken,
+  validator.validate,
   controller.onProgres
 );
 
 router.put(
   "/complete/:code",
   auth.authenticateToken,
+  validator.validate,
   controller.complete
 );
 
 router.delete(
   "/:code",
   auth.authenticateToken,
+  validator.validate,
   controller.delete
 );
 
