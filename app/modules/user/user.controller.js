@@ -217,12 +217,18 @@ exports.insertUser = async (req, res) => {
                 );
 
                 return res.status(200).send(result);
+            }else {
+
+                await model.createLog(trx, 'AC001', insertUser.c_code, 'SUCCESSFULLY', insertUser)
+                
             }
 
             result = {
                 code: "00",
                 message: "Success.",
-                data: insertUser,
+                data: {
+                    c_code: insertUser.c_code
+                },
             };
 
             // log info
@@ -326,12 +332,17 @@ exports.updateUser = async (req, res) => {
                 );
 
                 return res.status(200).send(result);
-            }
+            }else {
 
+                await model.createLog(trx, 'AC002', updateUser.c_code, 'SUCCESSFULLY', updateUser, before)
+                
+            }
             result = {
                 code: "00",
                 message: "Success.",
-                data: updateUser,
+                data: {
+                    c_code: updateUser.c_code
+                },
             };
 
             // log info
@@ -403,12 +414,18 @@ exports.deleteUser = async (req, res) => {
                 );
 
                 return res.status(200).send(result);
+            }else {
+
+                await model.createLog(trx, 'AC003', deleteUser.c_code, 'SUCCESSFULLY', deleteUser, before)
+                
             }
 
             result = {
                 code: "00",
                 message: "Success.",
-                data: deleteUser,
+                data: {
+                    c_code : deleteUser.c_code
+                },
             };
 
             // log info
@@ -504,12 +521,18 @@ exports.resetPassword = async (req, res) => {
                 );
 
                 return res.status(200).send(result);
+            }else {
+
+                await model.createLog(trx, 'AC004', resetPassword.c_code, 'SUCCESSFULLY', resetPassword, before)
+                
             }
 
             result = {
                 code: "00",
                 message: "Success.",
-                data: resetPassword,
+                data: {
+                    c_code : resetPassword.c_code
+                },
             };
 
             // log info

@@ -130,7 +130,7 @@ const insertUser = async (data, payload, trx) => {
       "c_created_by" : payload.user_code ,
       "n_created_by" : payload.user_name ,
       "d_created_at" : trx.raw("NOW()") ,
-    }, ['c_code'])
+    }, ['*'])
     
   return result[0];
 
@@ -148,11 +148,11 @@ const updateUser = async (params, data, payload, trx) => {
       "c_updated_by": payload.user_code,
       "n_updated_by": payload.user_name,
       "d_updated_at": trx.raw("now()"),
-    }, ["c_code"])
+    }, ["*"])
     .where("c_code", params)
     .where("c_status", "A")
 
-  return result;
+  return result[0];
 };
 
 // UPDATE PASSWORD
@@ -164,7 +164,7 @@ const resetPassword = async (params, data, payload, trx) => {
     "c_updated_by": payload.user_code,
     "n_updated_by": payload.user_name,
     "d_updated_at": trx.raw('NOW()')
-  }, ["c_code"])
+  }, ["*"])
   .where({
     "c_code" : params,
     "c_status" : "A"
@@ -182,7 +182,7 @@ const deleteUser = async (params, payload, trx) => {
       "c_deleted_by" : payload.user_code,
       "n_deleted_by" : payload.user_name,
       "d_deleted_at": trx.raw('NOW()')
-    }, ['c_code'])
+    }, ['*'])
     .where({
       "c_code": params,
       "c_status": "A"
@@ -239,6 +239,23 @@ const checkUpdate = async (params, data, before, trx) => {
 
 }
 
+const createLog = async (trx, activityCode, code, note, newData, oldData) => {
+  const log = await trx('log.t_log_activity').insert({
+    "c_activity_code" : activityCode,
+    "d_log" : trx.raw('NOW()'),
+    "c_source" : "WEB",
+    "c_code" : code,
+    "j_new_data" : JSON.stringify(newData),
+    "j_old_data" : oldData ? JSON.stringify(oldData) : trx.raw("NULL"),
+    "c_note" : note,
+    "d_created_at" : trx.raw('NOW()'),
+    "c_created_by" : newData.c_created_by,
+    "n_created_by" : newData.n_created_by,
+  }, ['i_log_activity'])
+  
+  return log
+}
+
 module.exports = {
   getTableUsers,
   getUsers,
@@ -251,5 +268,6 @@ module.exports = {
   checkDuplicatedInsert,
   generateUserCode,
   checkUpdate,
-  getListUsers
+  getListUsers,
+  createLog
 };
