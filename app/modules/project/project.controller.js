@@ -235,12 +235,18 @@ exports.create = async (req, res) => {
                 );
 
                 return res.status(200).send(result);
-            }
+            }else{
 
+                await model.createLog(trx, 'AC005', create.c_project_number, 'SUCCESSFULLY', create)
+
+            }
+            
             result = {
                 code: "00",
                 message: "Success",
-                data: create? create : {},
+                data: {
+                    c_project_number: create.c_project_number
+                },
             };
 
             // log warn
@@ -294,7 +300,7 @@ exports.update = async (req, res) => {
 
             // log warn
             winston.logger.warn(
-                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
+                `${uniqueCode} RESPONSE update project : ${JSON.stringify(result)}`
             );
 
             return res.status(200).send(result);
@@ -347,6 +353,10 @@ exports.update = async (req, res) => {
                 );
 
                 return res.status(200).json(result);
+            }else {
+
+                await model.createLog(trx, 'AC006', update.c_project_number, 'SUCCESSFULLY', update, oldData)
+                
             }
 
             result = {
@@ -392,6 +402,22 @@ exports.delete = async (req, res) => {
             user_name: req.name
         }
 
+        let oldData = await model.find(db, req.params.code)
+        if(!oldData){
+            result = {
+                code: "02",
+                message: "Project undefined ! ",
+                data: {},
+            };
+
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE delete project : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).send(result);
+        }
+
         await db.transaction(async trx => {
 
             // check if project have a transaction
@@ -426,12 +452,16 @@ exports.delete = async (req, res) => {
                 );
 
                 return res.status(200).send(result);
+            }else {
+
+                await model.createLog(trx, 'AC010', deleteProject.c_project_number, 'SUCCESSFULLY', deleteProject, oldData)
+                
             }
 
             result = {
                 code: "00",
                 message: "Success.",
-                data: deleteProject,
+                data: deleteProject.c_project_number,
             };
 
             // log info
@@ -474,6 +504,22 @@ exports.onProgres = async (req, res) => {
             `${uniqueCode} REQUEST on progress project : ${JSON.stringify(req.body)}`
         );
 
+        let oldData = await model.find(db, req.params.code)
+        if(!oldData){
+            result = {
+                code: "02",
+                message: "Project undefined ! ",
+                data: {},
+            };
+
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).send(result);
+        }
+
         await db.transaction(async trx => {
 
             const progress  = await model.setOnProgress(trx, req.params.code, payload)
@@ -490,6 +536,10 @@ exports.onProgres = async (req, res) => {
                 );
 
                 return res.status(200).send(result);
+            }else {
+
+                await model.createLog(trx, 'AC007', progress.c_project_number, 'SUCCESSFULLY', progress, oldData)
+                
             }
 
             result = {
@@ -538,6 +588,22 @@ exports.complete = async (req, res) => {
             `${uniqueCode} REQUEST complete project : ${JSON.stringify(req.body)}`
         );
 
+        let oldData = await model.find(db, req.params.code)
+        if(!oldData){
+            result = {
+                code: "02",
+                message: "Project undefined ! ",
+                data: {},
+            };
+
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE complete project : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).send(result);
+        }
+
         await db.transaction(async trx => {
 
             const complete  = await model.setComlplete(trx, req.params.code, payload)
@@ -554,6 +620,10 @@ exports.complete = async (req, res) => {
                 );
 
                 return res.status(200).send(result);
+            }else {
+
+                await model.createLog(trx, 'AC008', complete.c_project_number, 'SUCCESSFULLY', complete, oldData)
+                
             }
 
             result = {
@@ -597,6 +667,22 @@ exports.voidToOnProgress = async (req, res) => {
             user_name: req.name
         }
 
+        let oldData = await model.find(db, req.params.code)
+        if(!oldData){
+            result = {
+                code: "02",
+                message: "Project undefined ! ",
+                data: {},
+            };
+
+            // log warn
+            winston.logger.warn(
+                `${uniqueCode} RESPONSE void to progress project : ${JSON.stringify(result)}`
+            );
+
+            return res.status(200).send(result);
+        }
+
         await db.transaction(async trx => {
 
             const complete  = await model.setOnProgress(trx, req.params.code, payload)
@@ -613,6 +699,10 @@ exports.voidToOnProgress = async (req, res) => {
                 );
 
                 return res.status(200).send(result);
+            }else {
+
+                await model.createLog(trx, 'AC009', complete.c_project_number, 'SUCCESSFULLY', complete, oldData)
+                
             }
 
             result = {

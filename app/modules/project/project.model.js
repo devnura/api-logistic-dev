@@ -98,7 +98,8 @@ const create = async (trx, body, payload) => {
       "c_note": body.c_note,
       "c_created_by" : payload.user_code ,
       "n_created_by" : payload.user_name ,
-  },["c_project_number"])
+  },["*"])
+
   return result[0]
 } 
 
@@ -122,7 +123,7 @@ const update = async (trx, body, payload, code) => {
     "c_doc_project_url": body.c_doc_project_url
   }}
 
-  const result =  await trx("trx.t_d_project").update(dataUpdate,["c_project_number"])
+  const result =  await trx("trx.t_d_project").update(dataUpdate,["*"])
   .where("c_project_number", code)
 
   return result[0]
@@ -205,6 +206,23 @@ const getPurchaseOrder = async (trx, code) => {
   return result
 }
 
+const createLog = async (trx, activityCode, code, note, newData, oldData) => {
+    const log = await trx('log.t_log_activity').insert({
+      "c_activity_code" : activityCode,
+      "d_log" : trx.raw('NOW()'),
+      "c_source" : "WEB",
+      "c_code" : code,
+      "j_new_data" : JSON.stringify(newData),
+      "j_old_data" : oldData ? JSON.stringify(oldData) : trx.raw("NULL"),
+      "c_note" : note,
+      "d_created_at" : trx.raw('NOW()'),
+      "c_created_by" : newData.c_created_by,
+      "n_created_by" : newData.n_created_by,
+    }, ['i_log_activity'])
+    
+    return log
+}
+
 module.exports = {
     table,
     list,
@@ -215,5 +233,6 @@ module.exports = {
     getPurchaseOrder,
     deleteProject,
     setOnProgress,
-    setComlplete
+    setComlplete,
+    createLog
 };
