@@ -362,7 +362,9 @@ exports.update = async (req, res) => {
             result = {
                 code: "00",
                 message: "Success",
-                data: update ? update : {},
+                data: {
+                    c_project_number: update.c_project_number
+                },
             };
     
             // log warn
@@ -461,7 +463,9 @@ exports.delete = async (req, res) => {
             result = {
                 code: "00",
                 message: "Success.",
-                data: deleteProject.c_project_number,
+                data: {
+                    c_project_number: deleteProject.c_project_number
+                }
             };
 
             // log info
@@ -545,7 +549,9 @@ exports.onProgres = async (req, res) => {
             result = {
                 code: "00",
                 message: "Success.",
-                data: progress,
+                data: {
+                    c_project_number: progress.c_project_number
+                },
             };
 
             // log info
@@ -629,7 +635,9 @@ exports.complete = async (req, res) => {
             result = {
                 code: "00",
                 message: "Success.",
-                data: complete,
+                data: {
+                    c_project_number: complete.c_project_number
+                },
             };
 
             // log info
@@ -708,7 +716,9 @@ exports.voidToOnProgress = async (req, res) => {
             result = {
                 code: "00",
                 message: "Success.",
-                data: complete,
+                data: {
+                    c_project_number : complete.c_project_number
+                },
             };
 
             // log info

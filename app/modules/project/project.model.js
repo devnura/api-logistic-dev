@@ -136,7 +136,7 @@ const deleteProject = async (trx, params, payload) => {
     "c_deleted_by" : payload.user_code,
     "n_deleted_by" : payload.user_name,
     "d_deleted_at": trx.raw('NOW()')
-  }, ['c_project_number'])
+  }, ['*'])
   .where({
     "c_project_number": params
   })
@@ -151,7 +151,7 @@ const setOnProgress = async (trx, params, payload) => {
     "c_updated_by" : payload.user_code,
     "n_updated_by" : payload.user_name,
     "d_updated_at" : trx.raw('NOW()'),
-  }, ['c_project_number'])
+  }, ['*'])
   .where({
     "c_project_number": params
   })
@@ -169,7 +169,7 @@ const setComlplete = async (trx, params, payload) => {
     "c_completed_by" : payload.user_code,
     "n_completed_by" : payload.user_name,
     "d_completed_at" : trx.raw('NOW()'),
-  }, ['c_project_number'])
+  }, ['*'])
   .where({
     "c_project_number": params
   })
