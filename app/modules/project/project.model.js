@@ -1,39 +1,70 @@
 const table = async (trx, params) => {
-  // let searchCriteria = {}
-    let result = await trx
-      .select(
-        "tdp.c_project_number",
-        "tdp.c_project_name",
-        "tdp.c_project_manager_code",
-        "tdp.c_project_manager_name",
-        trx.raw("TO_CHAR(tdp.d_project_start, 'YYYY-MM-DD') AS d_project_start"),
-        trx.raw("TO_CHAR(tdp.d_project_end, 'YYYY-MM-DD') AS d_project_end"),
-        "tdp.c_doc_project_number",
-        "tdp.c_doc_project_url",
-        "tdp.c_doc_contract_number",
-        "tdp.c_doc_spdb_number",
-        "tdp.c_note",
-        "tdp.c_status",
-        "tdp.c_status_name",
-      )
-      .from('trx.t_d_project AS tdp')
-      .whereRaw("1+1 = 2")
-      .where((qb) => {
-        if (params.keyword) {
-          qb.orWhere("c_project_number", "ilike", `%${params.keyword}%`)
-          qb.orWhere("c_project_name", "ilike", `%${params.keyword}%`)
-          qb.orWhere("c_project_manager_code", "ilike", `%${params.keyword}%`)
-          qb.orWhere("c_project_manager_name", "ilike", `%${params.keyword}%`)
-          qb.orWhere("c_doc_project_number", "ilike", `%${params.keyword}%`)
-          qb.orWhere("c_doc_contract_number", "ilike", `%${params.keyword}%`)
-          qb.orWhere("c_doc_spdb_number", "ilike", `%${params.keyword}%`)
-        }
+  const pagination = {}
+  
+  let per_page = params.limit || 10;
+  let page = params.page || 1;
+  if (page < 1) page = 1;
+  let offset = (page - 1) * per_page;
 
-      })
-      .orderBy("c_project_number", "DESC")
-      .paginate({ perPage: params.limit, currentPage: params.page })
+  let data = await trx('trx.t_d_project AS tdp').count('i_project AS count')
+  .whereRaw("1+1 = 2")
+  .where((qb) => {
+    if (params.keyword) {
+      qb.orWhere("c_project_number", "ilike", `%${params.keyword}%`)
+      qb.orWhere("c_project_name", "ilike", `%${params.keyword}%`)
+      qb.orWhere("c_project_manager_code", "ilike", `%${params.keyword}%`)
+      qb.orWhere("c_project_manager_name", "ilike", `%${params.keyword}%`)
+      qb.orWhere("c_doc_project_number", "ilike", `%${params.keyword}%`)
+      qb.orWhere("c_doc_contract_number", "ilike", `%${params.keyword}%`)
+      qb.orWhere("c_doc_spdb_number", "ilike", `%${params.keyword}%`)
+    }
+  }).first()
 
-    return result;
+  let rows = await trx
+    .select(
+      "tdp.c_project_number",
+      "tdp.c_project_name",
+      "tdp.c_project_manager_code",
+      "tdp.c_project_manager_name",
+      trx.raw("TO_CHAR(tdp.d_project_start, 'YYYY-MM-DD') AS d_project_start"),
+      trx.raw("TO_CHAR(tdp.d_project_end, 'YYYY-MM-DD') AS d_project_end"),
+      "tdp.c_doc_project_number",
+      "tdp.c_doc_project_url",
+      "tdp.c_doc_contract_number",
+      "tdp.c_doc_spdb_number",
+      "tdp.c_note",
+      "tdp.c_status",
+      "tdp.c_status_name",
+    )
+    .from('trx.t_d_project AS tdp')
+    .whereRaw("1+1 = 2")
+    .where((qb) => {
+      if (params.keyword) {
+        qb.orWhere("c_project_number", "ilike", `%${params.keyword}%`)
+        qb.orWhere("c_project_name", "ilike", `%${params.keyword}%`)
+        qb.orWhere("c_project_manager_code", "ilike", `%${params.keyword}%`)
+        qb.orWhere("c_project_manager_name", "ilike", `%${params.keyword}%`)
+        qb.orWhere("c_doc_project_number", "ilike", `%${params.keyword}%`)
+        qb.orWhere("c_doc_contract_number", "ilike", `%${params.keyword}%`)
+        qb.orWhere("c_doc_spdb_number", "ilike", `%${params.keyword}%`)
+      }
+
+    })
+    .orderBy("c_project_number", "DESC")
+    .offset(offset).limit(per_page)
+
+    let count = parseInt(data.count);
+    pagination.total = count;
+    pagination.perPage = per_page;
+    pagination.lastPage = Math.ceil(count / per_page);
+    pagination.currentPage = page;
+    pagination.from = offset+1;
+    pagination.to = offset + rows.length;
+    pagination.search = params.keyword || "";
+    pagination.rows = rows;
+
+    return pagination;
+
   };
 
 const list = async (trx) => {

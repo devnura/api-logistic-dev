@@ -1,6 +1,27 @@
 // GET USERS
 const getTableUsers = async (trx, params) => {
-  let result = await trx
+
+  const pagination = {}
+
+  let per_page = params.limit || 10;
+  let page = params.page || 1;
+  if (page < 1) page = 1;
+  let offset = (page - 1) * per_page;
+
+  let data = await trx('t_m_user').count('i_id AS count')
+    .whereRaw("1+1 = 2")
+    .where((qb) => {
+      if (params.keyword) {
+        qb.orWhere("tmu.c_code", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmu.c_group_code", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmg.c_group_name", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmu.c_first_name", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmu.c_last_name", "ilike", `%${params.keyword}%`)
+        qb.orWhere("tmu.c_phone_number", "ilike", `%${params.keyword}%`)
+      }
+    }).first()
+
+  let rows = await trx
     .select(
       "tmu.c_code",
       "tmu.c_group_code",
@@ -29,10 +50,20 @@ const getTableUsers = async (trx, params) => {
       }
 
     })
+    .offset(offset).limit(per_page)
     .orderBy("tmu.c_code", "DESC")
-    .paginate({ perPage: params.limit, currentPage: params.page })
 
-  return result;
+    let count = parseInt(data.count);
+    pagination.total = count;
+    pagination.perPage = per_page;
+    pagination.lastPage = Math.ceil(count / per_page);
+    pagination.currentPage = page;
+    pagination.from = offset+1;
+    pagination.to = offset + rows.length;
+    pagination.search = params.keyword || "";
+    pagination.rows = rows;
+
+    return pagination;
 };
 
 const getListUsers = async (trx) => {
