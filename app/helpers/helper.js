@@ -47,10 +47,25 @@ const getDomainName = async (req) => {
   return result
 }
 
+const generatePaginate = (count, rows, page, limit, offset) => {
+  const pagination = {}
+
+  pagination.total = parseInt(count);
+  pagination.perPage = parseInt(limit);
+  pagination.lastPage = Math.ceil(parseInt(count) / parseInt(limit));
+  pagination.currentPage = parseInt(page);
+  pagination.from = offset+1;
+  pagination.to = offset + rows.length;
+  pagination.rows = rows;
+
+  return pagination;
+}
+
 module.exports = {
   encryptText,
   decryptText,
   getUniqueCode,
   getRandomStrig,
-  getDomainName
+  getDomainName,
+  generatePaginate
 };

@@ -1,10 +1,11 @@
+const helper = require('../../helpers/helper')
+
 const table = async (trx, params) => {
-  const pagination = {}
   
   let per_page = params.limit || 10;
   let page = params.page || 1;
   if (page < 1) page = 1;
-  let offset = (page - 1) * per_page;
+  let offset = (page - 1) * params.limit;
 
   let data = await trx('trx.t_d_project AS tdp').count('i_project AS count')
   .whereRaw("1+1 = 2")
@@ -53,17 +54,7 @@ const table = async (trx, params) => {
     .orderBy("c_project_number", "DESC")
     .offset(offset).limit(per_page)
 
-    let count = parseInt(data.count);
-    pagination.total = count;
-    pagination.perPage = per_page;
-    pagination.lastPage = Math.ceil(count / per_page);
-    pagination.currentPage = page;
-    pagination.from = offset+1;
-    pagination.to = offset + rows.length;
-    pagination.search = params.keyword || "";
-    pagination.rows = rows;
-
-    return pagination;
+    return helper.generatePaginate(data.count, rows, page, params.limit, offset);
 
   };
 

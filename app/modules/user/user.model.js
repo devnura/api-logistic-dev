@@ -1,12 +1,12 @@
+const helper = require('../../helpers/helper')
+
 // GET USERS
 const getTableUsers = async (trx, params) => {
-
-  const pagination = {}
 
   let per_page = params.limit || 10;
   let page = params.page || 1;
   if (page < 1) page = 1;
-  let offset = (page - 1) * per_page;
+  let offset = (page - 1) * params.limit;
 
   let data = await trx('t_m_user').count('i_id AS count')
     .whereRaw("1+1 = 2")
@@ -53,17 +53,8 @@ const getTableUsers = async (trx, params) => {
     .offset(offset).limit(per_page)
     .orderBy("tmu.c_code", "DESC")
 
-    let count = parseInt(data.count);
-    pagination.total = count;
-    pagination.perPage = per_page;
-    pagination.lastPage = Math.ceil(count / per_page);
-    pagination.currentPage = page;
-    pagination.from = offset+1;
-    pagination.to = offset + rows.length;
-    pagination.search = params.keyword || "";
-    pagination.rows = rows;
+  return helper.generatePaginate(data.count, rows, page, params.limit, offset);
 
-    return pagination;
 };
 
 const getListUsers = async (trx) => {
@@ -150,19 +141,19 @@ const insertUser = async (data, payload, trx) => {
 
   let result = await trx("t_m_user")
     .insert({
-      "c_code" : data.c_code,
-      "c_group_code" : data.c_group_code,
-      "c_email" : data.c_email,
-      "e_password" : data.passwordHash,
-      "c_knowing_password" : data.knowingPassword,
-      "c_first_name" : data.c_first_name,
-      "c_last_name" : data.c_last_name ? data.c_last_name : null,
-      "c_phone_number" : data.c_phone_number,
-      "c_created_by" : payload.user_code ,
-      "n_created_by" : payload.user_name ,
-      "d_created_at" : trx.raw("NOW()") ,
+      "c_code": data.c_code,
+      "c_group_code": data.c_group_code,
+      "c_email": data.c_email,
+      "e_password": data.passwordHash,
+      "c_knowing_password": data.knowingPassword,
+      "c_first_name": data.c_first_name,
+      "c_last_name": data.c_last_name ? data.c_last_name : null,
+      "c_phone_number": data.c_phone_number,
+      "c_created_by": payload.user_code,
+      "n_created_by": payload.user_name,
+      "d_created_at": trx.raw("NOW()"),
     }, ['*'])
-    
+
   return result[0];
 
 };
@@ -188,20 +179,20 @@ const updateUser = async (params, data, payload, trx) => {
 
 // UPDATE PASSWORD
 const resetPassword = async (params, data, payload, trx) => {
-  
-  let rows = await trx("public.t_m_user").update({
-    "e_password" : data.passwordHash,
-    "c_knowing_password" : data.knowingPassword,
-    "c_updated_by": payload.user_code,
-    "n_updated_by": payload.user_name,
-    "d_updated_at": trx.raw('NOW()')
-  }, ["*"])
-  .where({
-    "c_code" : params,
-    "c_status" : "A"
-  })
 
-return rows[0]
+  let rows = await trx("public.t_m_user").update({
+      "e_password": data.passwordHash,
+      "c_knowing_password": data.knowingPassword,
+      "c_updated_by": payload.user_code,
+      "n_updated_by": payload.user_name,
+      "d_updated_at": trx.raw('NOW()')
+    }, ["*"])
+    .where({
+      "c_code": params,
+      "c_status": "A"
+    })
+
+  return rows[0]
 }
 
 // DELETE USER
@@ -209,9 +200,9 @@ const deleteUser = async (params, payload, trx) => {
 
   let rows = await trx('public.t_m_user').update({
       "c_status": "X",
-      "c_status_name" : "DELETED",
-      "c_deleted_by" : payload.user_code,
-      "n_deleted_by" : payload.user_name,
+      "c_status_name": "DELETED",
+      "c_deleted_by": payload.user_code,
+      "n_deleted_by": payload.user_name,
       "d_deleted_at": trx.raw('NOW()')
     }, ['*'])
     .where({
@@ -238,13 +229,13 @@ const checkDuplicatedInsert = async (data, trx) => {
 const generateUserCode = async (trx) => {
 
   let code = ''
-  const prefix = 'U' 
+  const prefix = 'U'
   let result = await trx.raw("SELECT substring(tmu.c_code, 2, 3)::INT AS code FROM public.t_m_user tmu ORDER BY substring(tmu.c_code, 2, 3)::INT DESC LIMIT 1")
   // console.log(result.rows)
-  if(result.rows.length > 0){
-      code = prefix+""+String(parseInt(result.rows[0].code) + 1).padStart(3, '0')
-  }else{
-      code = prefix+""+String(1).padStart(3, '0')
+  if (result.rows.length > 0) {
+    code = prefix + "" + String(parseInt(result.rows[0].code) + 1).padStart(3, '0')
+  } else {
+    code = prefix + "" + String(1).padStart(3, '0')
   }
 
   return code
@@ -256,11 +247,11 @@ const checkUpdate = async (params, data, before, trx) => {
     .select(['c_email'])
     .where({
       'c_email': data.c_email,
-      "c_phone_number" : data.c_phone_number
+      "c_phone_number": data.c_phone_number
     })
     .whereNot({
-      "c_email" : before.c_email,
-      "c_phone_number" : before.c_phone_number
+      "c_email": before.c_email,
+      "c_phone_number": before.c_phone_number
     })
     .where('c_status', "A")
     .whereNot("c_code", params)
@@ -272,18 +263,18 @@ const checkUpdate = async (params, data, before, trx) => {
 
 const createLog = async (trx, activityCode, code, note, newData, oldData) => {
   const log = await trx('log.t_log_activity').insert({
-    "c_activity_code" : activityCode,
-    "d_log" : trx.raw('NOW()'),
-    "c_source" : "WEB",
-    "c_code" : code,
-    "j_new_data" : JSON.stringify(newData),
-    "j_old_data" : oldData ? JSON.stringify(oldData) : trx.raw("NULL"),
-    "c_note" : note,
-    "d_created_at" : trx.raw('NOW()'),
-    "c_created_by" : newData.c_created_by,
-    "n_created_by" : newData.n_created_by,
+    "c_activity_code": activityCode,
+    "d_log": trx.raw('NOW()'),
+    "c_source": "WEB",
+    "c_code": code,
+    "j_new_data": JSON.stringify(newData),
+    "j_old_data": oldData ? JSON.stringify(oldData) : trx.raw("NULL"),
+    "c_note": note,
+    "d_created_at": trx.raw('NOW()'),
+    "c_created_by": newData.c_created_by,
+    "n_created_by": newData.n_created_by,
   }, ['i_log_activity'])
-  
+
   return log
 }
 
