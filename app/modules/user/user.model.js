@@ -8,7 +8,10 @@ const getTableUsers = async (trx, params) => {
   if (page < 1) page = 1;
   let offset = (page - 1) * params.limit;
 
-  let data = await trx('t_m_user').count('i_id AS count')
+  let data = await trx('t_m_user AS tmu').count('tmu.i_id AS count')
+    .leftJoin('public.t_m_group as tmg', function () {
+      this.on('tmg.c_group_code', '=', 'tmu.c_group_code')
+    })
     .whereRaw("1+1 = 2")
     .where((qb) => {
       if (params.keyword) {
