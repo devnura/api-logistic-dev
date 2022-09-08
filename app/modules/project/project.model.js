@@ -104,13 +104,13 @@ const find = async (trx, code) => {
     return result;
 };
 
-const create = async (trx, body, payload) => {
+const create = async (trx, body, payload, projectManager) => {
   const result =  await trx("trx.t_d_project").insert({
       "c_project_name": body.c_project_name,
       "d_project_date": body.d_project_date,
       "c_project_number": body.c_project_number,
       "c_project_manager_code": body.c_project_manager_code,
-      "c_project_manager_name": body.c_project_manager_name,
+      "c_project_manager_name": projectManager.c_project_manager_name,
       "d_project_start": body.d_project_start,
       "d_project_end": body.d_project_end,
       "c_doc_project_number": body.c_doc_project_number,
@@ -125,11 +125,11 @@ const create = async (trx, body, payload) => {
   return result[0]
 } 
 
-const update = async (trx, body, payload, code) => {
+const update = async (trx, body, payload, code, projectManager) => {
   let dataUpdate = {
       "c_project_name": body.c_project_name,
       "c_project_manager_code": body.c_project_manager_code,
-      "c_project_manager_name": body.c_project_manager_name,
+      "c_project_manager_name": projectManager.c_project_manager_name,
       "d_porject_start": body.d_porject_start,
       "d_project_end": body.d_project_end,
       "c_doc_project_number": body.c_doc_project_number,
@@ -242,6 +242,21 @@ const getListProjectManager = async (trx) => {
   return result;
 };
 
+const getProejctManager = async (trx, code) => {
+  let result = await trx
+  .select(
+    "tmu.c_code",
+    trx.raw("COALESCE(tmu.c_first_name, '') || ' ' ||COALESCE(tmu.c_last_name, '') AS c_project_manager_name"),
+  )
+  .from('public.t_m_user as tmu')
+  .where("tmu.c_code", code)
+  .whereNot("c_status", 'X')
+  .orderBy("tmu.c_code", "DESC")
+
+  return result;
+  
+}
+
 
 const createLog = async (trx, activityCode, code, note, newData, oldData) => {
     const log = await trx('log.t_log_activity').insert({
@@ -272,5 +287,6 @@ module.exports = {
     setOnProgress,
     setComlplete,
     createLog,
-    getListProjectManager
+    getListProjectManager,
+    getProejctManager
 };
