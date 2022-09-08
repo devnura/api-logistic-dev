@@ -64,7 +64,7 @@ const getListUsers = async (trx) => {
   let result = await trx
     .select(
       "tmu.c_code",
-      trx.raw("tmu.c_first_name || tmu.c_last_name AS c_project_manager_name"),
+      trx.raw("COALESCE(tmu.c_first_name, '') || ' ' ||COALESCE(tmu.c_last_name, '') AS c_project_manager_name"),
     )
     .from('public.t_m_user as tmu')
     .whereNot("c_status", 'X')

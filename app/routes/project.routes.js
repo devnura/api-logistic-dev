@@ -20,6 +20,12 @@ router.get(
   validator.validate,
   controller.table
 );
+router.get(
+  "/projectManager",
+  auth.authenticateToken,
+  validator.validate,
+  controller.getProejctManager
+);
 
 router.get(
   "/:code",

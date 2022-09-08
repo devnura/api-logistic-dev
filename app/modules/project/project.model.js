@@ -228,6 +228,21 @@ const getPurchaseOrder = async (trx, code) => {
   return result
 }
 
+const getListProjectManager = async (trx) => {
+  let result = await trx
+    .select(
+      "tmu.c_code",
+      trx.raw("COALESCE(tmu.c_first_name, '') || ' ' ||COALESCE(tmu.c_last_name, '') AS c_project_manager_name"),
+    )
+    .from('public.t_m_user as tmu')
+    .where("c_group_code", 'G11')
+    .whereNot("c_status", 'X')
+    .orderBy("tmu.c_code", "DESC")
+
+  return result;
+};
+
+
 const createLog = async (trx, activityCode, code, note, newData, oldData) => {
     const log = await trx('log.t_log_activity').insert({
       "c_activity_code" : activityCode,
@@ -256,5 +271,6 @@ module.exports = {
     deleteProject,
     setOnProgress,
     setComlplete,
-    createLog
+    createLog,
+    getListProjectManager
 };

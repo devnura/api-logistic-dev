@@ -745,3 +745,45 @@ exports.voidToOnProgress = async (req, res) => {
         });
     }
 }
+
+exports.getProejctManager = async (req, res) => {
+    try {
+          
+        uniqueCode = req.requestId
+
+        // log debug
+        winston.logger.debug(`${uniqueCode} getting project manager...`);
+
+        // check data login
+        let projectList = await model.getListProjectManager(db)
+   
+        // log debug
+        winston.logger.debug(`${uniqueCode} result project manager : ${JSON.stringify(projectList)}`);
+
+        result = {
+            code: "00",
+            message: "Success.",
+            data: projectList,
+        }; 
+
+        // log info
+        winston.logger.info(
+            `${uniqueCode} RESPONSE get project manager: ${JSON.stringify(result)}`
+        );
+
+        return res.status(200).send(result);
+
+    } catch (error) {
+        // create log
+        winston.logger.error(
+            `500 internal server error - backend server | ${error.message}`
+        );
+
+        return res.status(200).json({
+            code: "500",
+            message: process.env.NODE_ENV != "production" ?
+                error.message : "500 internal server error - backend server.",
+            data: {},
+        });
+    }
+}
