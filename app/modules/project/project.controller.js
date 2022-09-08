@@ -221,7 +221,7 @@ exports.create = async (req, res) => {
             }}
 
             const projectManager = await model.getProejctManager(trx, body.c_project_manager_code)
-
+            console.log(projectManager)
             const create = await model.create(trx, body, payload, projectManager)
 
             if (!create) {
@@ -341,6 +341,7 @@ exports.update = async (req, res) => {
         
         await db.transaction(async trx => {
             const projectManager = await model.getProejctManager(trx, body.c_project_manager_code)
+            
             const update = await model.update(trx, body, payload, req.params.code, projectManager)
             if(!update){
                 await trx.rollback()

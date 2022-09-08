@@ -251,8 +251,8 @@ const getProejctManager = async (trx, code) => {
   .from('public.t_m_user as tmu')
   .where("tmu.c_code", code)
   .whereNot("c_status", 'X')
-  .orderBy("tmu.c_code", "DESC")
-
+  .first()
+  
   return result;
   
 }
