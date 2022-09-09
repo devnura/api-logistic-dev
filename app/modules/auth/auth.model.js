@@ -41,11 +41,24 @@ const updateRefreshToken = (code, oldRefreshToken, newRefreshToken) => {
 };
 
 // CHECK LOGIN USER
-const checkUser = (email) => {
-  let result = knex("t_m_user as tmu")
-    .where("tmu.c_status", "!=", "X")
-    .where("c_email", email)
-    .first();
+const checkUser =  (email) => {
+  let result =  knex
+  .select([
+    "tmu.c_code",
+    "tmu.c_first_name",
+    "tmu.c_last_name",
+    "tmu.c_email",
+    "tmu.e_password",
+    "tmg.c_group_code",
+    "tmg.c_group_name",
+  ])
+  .from("t_m_user as tmu")
+  .leftJoin('public.t_m_group as tmg', function () {
+    this.on('tmg.c_group_code', '=', 'tmu.c_group_code')
+  })
+  .where("tmu.c_status", "!=", "X")
+  .where("tmu.c_email", email)
+  .first();
   return result;
 };
 

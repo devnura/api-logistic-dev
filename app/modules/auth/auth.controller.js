@@ -156,10 +156,10 @@ const loginUser = async (req, res) => {
       message: "Login Success.",
       data: {
         first_name: checkUser.c_first_name,
-        last_name: checkUser.c_last_name,
+        last_name: checkUser?.c_last_name || "",
         email: checkUser.c_email,
-        group: checkUser.c_group_code,
-        group: checkUser.c_group_name,
+        group_code: checkUser.c_group_code,
+        group_name: checkUser.c_group_name,
         access_token: accessToken,
         refresh_token: refreshToken,
       },
