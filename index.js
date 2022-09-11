@@ -17,6 +17,7 @@ const authRoute = require("./app/routes/auth.routes");
 const userRoute = require("./app/routes/user.routes");
 const groupRoute = require("./app/routes/group.routes");
 const projectRoute = require("./app/routes/project.routes");
+const purchaseorderRoute = require("./app/routes/purchaseorder.routes");
 
 
 app.use("/"+process.env.STATIC_PATH, express.static(path.join(__dirname, process.env.STATIC_PATH)))
@@ -34,6 +35,7 @@ router.use("/auth", authRoute);
 router.use("/user", userRoute);
 router.use("/group", groupRoute);
 router.use("/project", projectRoute);
+router.use("/purchase-order", purchaseorderRoute);
 
 
 const PORT = process.env.PORT || 8000;
