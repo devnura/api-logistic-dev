@@ -54,7 +54,7 @@ const generatePaginate = (count, rows, page, limit, offset) => {
   pagination.perPage = parseInt(limit);
   pagination.lastPage = Math.ceil(parseInt(count) / parseInt(limit));
   pagination.currentPage = parseInt(page);
-  pagination.from = offset+1;
+  pagination.from = offset + rows.length < 1? offset : offset+1;
   pagination.to = offset + rows.length;
   pagination.rows = rows;
 
