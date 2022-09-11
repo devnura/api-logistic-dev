@@ -221,7 +221,7 @@ exports.create = async (req, res) => {
             }}
 
             const projectManager = await model.getProejctManager(trx, body.c_project_manager_code)
-            console.log(projectManager)
+
             const create = await model.create(trx, body, payload, projectManager)
 
             if (!create) {
@@ -329,7 +329,9 @@ exports.update = async (req, res) => {
         if (req.file) {
             // remove old file
             let oldFile = oldData.c_doc_project_url.split("/").splice(-4).join("/")
-            await unlinkAsync(`${process.cwd()}/${oldFile}`)
+            let dir = `${process.cwd()}/${oldFile}`
+
+            if (fs.existsSync(dir)) await unlinkAsync(`${process.cwd()}/${oldFile}`)
 
             // new file
             let file_url = await helper.getDomainName(req) + '/' + process.env.STATIC_PATH_PDF + "" + req.file.filename;
