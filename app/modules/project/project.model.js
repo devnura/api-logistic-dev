@@ -66,7 +66,8 @@ const list = async (trx) => {
         "tdp.c_project_name",
       )
       .from('trx.t_d_project AS tdp')
-
+      .whereNot("c_status", "X")
+  
     return result;
   };
 

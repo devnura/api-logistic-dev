@@ -234,7 +234,7 @@ exports.create = async (req, res) => {
 
                 // log info
                 winston.logger.warn(
-                    `${uniqueCode} RESPONSE delete user : ${JSON.stringify(result)}`
+                    `${uniqueCode} RESPONSE create project : ${JSON.stringify(result)}`
                 );
 
                 return res.status(200).send(result);
