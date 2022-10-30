@@ -25,8 +25,10 @@ const authenticateRefreshToken = (req, res, next) => {
   let verifyOptions = {
     issuer: 'YOSANGGI',
   }
+  console.log(process.env.REFRESH_TOKEN_SECRET)
 
   jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET, verifyOptions, (err, data) => {
+    console.log(data)
     if (err) {
       return res.json({
         code: "400",
@@ -34,6 +36,7 @@ const authenticateRefreshToken = (req, res, next) => {
         data: {},
       });
     }
+
     req.code = helper.decryptText(data.code)
 
     next();
