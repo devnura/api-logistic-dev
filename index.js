@@ -44,8 +44,3 @@ const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   winston.logger.info(`Server is running on environment: ${process.env.NODE_ENV.toUpperCase()}`);
 });
-
-const helper = require("./app/helpers/helper")
-
-console.log('NodeJS decrypt: ', helper.decryptText("U2FsdGVkX18J68NoXMn4Ftjjd466OMROaYPjZpcz3h0="));
-console.log('NodeJS decrypt: ', helper.decryptText("U2FsdGVkX19xklCgrVfgp8tD4PYLyuNjYP/PJ5CF+HY="));
