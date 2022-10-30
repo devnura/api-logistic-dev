@@ -246,46 +246,35 @@ const logoutUser = async (req, res) => {
     const deleteRefreshToken = await model.deleteRefreshToken(code)
 
     if (deleteRefreshToken < 1) {
-      result = {
-        code: "400",
-        message: "Invalid session !",
-        data: {},
-      };
+      result = helper.createResponse(401, "Unauthorized", "Invalid session", []);
 
       // log warn
       winston.logger.info(
-        `${uniqueCode} RESPONSE : ${JSON.stringify(result)}`
+        `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
       );
 
-      return res.status(200).json(result);
+      return res.status(401).json(result);
 
     }
 
-    result = {
-      code: "00",
-      message: "Success Logout.",
-      data: {},
-    };
+
+    result = helper.createResponse(200, "OK", [], []);
 
     winston.logger.info(
-      `${uniqueCode} RESPONSE refresh token: ${JSON.stringify(result)}`
+      `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
     );
 
     return res.status(200).json(result);
 
   } catch (error) {
     // create log
-    winston.logger.error(
-      `500 internal server error - backend server | ${error.message}`
-    );
+    result = helper.createResponse(500, "Internal Server Error", error.message, []);
 
-    return res.status(200).json({
-      code: "500",
-      message: process.env.NODE_ENV != "production" ?
-        error.message :
-        "500 internal server error - backend server.",
-      data: {},
-    });
+    winston.logger.error(
+      `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
+    );
+    
+    return res.status(500).json(result);
   }
 }
 
