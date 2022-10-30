@@ -26,35 +26,28 @@ exports.getUsersTable = async (req, res) => {
 
         // check data login
         let getUsers = await model.getTableUsers(db, params)
-
+        
         // log debug
-        winston.logger.debug(`${uniqueCode} result users : ${JSON.stringify(getUsers)}`);
+        winston.logger.debug(`${req.requestId} ${req.requestUrl} result users : ${JSON.stringify(getUsers)}`);
 
-        result = {
-            code: "00",
-            message: "Success.",
-            data: getUsers,
-        }; 
+        result = helper.createResponse(200, "OK", [], getUsers);
 
         // log info
         winston.logger.info(
-            `${uniqueCode} RESPONSE get users : ${JSON.stringify(result)}`
+            `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
         );
 
         return res.status(200).send(result);
 
     } catch (error) {
         // create log
+        result = helper.createResponse(500, "Internal Server Error", error.message, []);
+
         winston.logger.error(
-            `500 internal server error - backend server | ${error.message}`
+        `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
         );
 
-        return res.status(200).send({
-            code: "500",
-            message: process.env.NODE_ENV != "production" ?
-                error.message : "500 internal server error - backend server.",
-            data: {},
-        });
+        return res.status(500).json(result);
     }
 };
 
@@ -64,40 +57,41 @@ exports.getUsersList = async (req, res) => {
         uniqueCode = req.requestId
 
         // log debug
-        winston.logger.debug(`${uniqueCode} getting users...`);
+        winston.logger.debug(`${req.requestId} ${req.requestUrl} getting users...`);
 
         // check data login
         let getUsers = await model.getListUsers(db)
 
-        // log debug
-        winston.logger.debug(`${uniqueCode} result users : ${JSON.stringify(getUsers)}`);
+        if(!getUsers.length){
+            result = helper.createResponse(404, "Not Found", "User not found", getUsers);
+            // log info
+            winston.logger.info(
+                `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
+            );
+            
+            return res.status(404).send(result);
 
-        result = {
-            code: "00",
-            message: "Success.",
-            data: getUsers,
-        }; 
+        }
+
+        result = helper.createResponse(200, "OK", [], []);
 
         // log info
         winston.logger.info(
-            `${uniqueCode} RESPONSE get users : ${JSON.stringify(result)}`
+            `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
         );
 
         return res.status(200).send(result);
 
     } catch (error) {
-        // create log
-        winston.logger.error(
-            `500 internal server error - backend server | ${error.message}`
-        );
+         // create log
+         result = helper.createResponse(500, "Internal Server Error", error.message, []);
 
-        return res.status(200).send({
-            code: "500",
-            message: process.env.NODE_ENV != "production" ?
-                error.message : "500 internal server error - backend server.",
-            data: {},
-        });
-    }
+         winston.logger.error(
+         `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
+         );
+ 
+         return res.status(500).json(result);
+     }
 };
 
 exports.getUser = async (req, res) => {
@@ -109,39 +103,41 @@ exports.getUser = async (req, res) => {
             code
         } = req.params
         // log debug
-        winston.logger.debug(`${uniqueCode} getting user : ${code}`);
+        winston.logger.debug(`${req.requestId} ${req.requestUrl} getting user : ${code}`);
 
         // check data login
         let getUser = await model.getUser(code, db)
+        if(!getUser){
+            result = helper.createResponse(404, "Not Found", "User not found", []);
+            // log info
+            winston.logger.info(
+                `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
+            );
+            
+            return res.status(404).send(result);
 
+        }
         // log debug
-        winston.logger.debug(`${uniqueCode} result user : ${JSON.stringify(getUser)}`);
+        winston.logger.debug(`${req.requestId} ${req.requestUrl} result user : ${JSON.stringify(getUser)}`);
 
-        result = {
-            code: "00",
-            message: "Success.",
-            data: getUser ? getUser : {},
-        };
+        result = helper.createResponse(200, "OK", [], getUser);
 
         // log info
         winston.logger.info(
-            `${uniqueCode} RESPONSE user : ${JSON.stringify(result)}`
+            `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
         );
 
         return res.status(200).send(result);
 
     } catch (error) {
-        // create log
-        winston.logger.error(
-            `500 internal server error - backend server | ${error.message}`
-        );
+         // create log
+         result = helper.createResponse(500, "Internal Server Error", error.message, []);
 
-        return res.status(200).send({
-            code: "500",
-            message: process.env.NODE_ENV != "production" ?
-                error.message : "500 internal server error - backend server.",
-            data: {},
-        });
+         winston.logger.error(
+         `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
+         );
+ 
+         return res.status(500).json(result);
     }
 }
 

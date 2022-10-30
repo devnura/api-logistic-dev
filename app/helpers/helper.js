@@ -64,10 +64,21 @@ const generatePaginate = (count, rows, page, limit, offset) => {
 }
 
 const createResponse = (code, status, errors, data) => {
+  let error
+  if(process.env.NODE_ENV == "production") {
+    if (code >= 500) {
+      error = [{msg : "Internal server error"}]
+    }else {
+      error = Array.isArray(errors) ? errors : [{msg : errors}]
+    }
+  }else {
+    error = Array.isArray(errors) ? errors : [{msg : errors}]
+  }
+
   return {
     code: parseInt(code),
     status: status,
-    errors: Array.isArray(errors) ? errors : [{msg : errors}],
+    errors: error,
     data: Array.isArray(data) ? data : [data],
   }
 }

@@ -78,34 +78,3 @@ exports.rules = (method) => {
             break;
     }
 }
-
-exports.validate = async (req, res, next) => {
-
-    const requestId = helper.getUniqueCode()
-
-    const errors = validationResult(req)
-
-    // log info
-    winston.logger.info(
-        `${requestId} REQUEST : ${JSON.stringify(req.body)}`
-    );
-
-    if (!errors.isEmpty()) {
-        result = {
-            code: "99",
-            message: 'Invalid Value',
-            data: errors.array(),
-        };
-
-        // log warn
-        winston.logger.warn(
-            `${requestId} RESPONSE : ${JSON.stringify(result)}`
-        );
-        
-        return res.status(200).json(result);
-    }
-
-    req.requestId = requestId
-
-    next()
-}

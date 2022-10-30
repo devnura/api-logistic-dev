@@ -3,13 +3,13 @@ const router = express.Router();
 const auth = require("../middleware/jwt.middleware");
 const controller = require("../modules/user/user.controller");
 const validator = require("../modules/project/project.validate");
-
+const helper = require("../helpers/validateRequest")
 // ============================== USER ==============================
 
 router.get(
   "/list",
   auth.authenticateToken,
-  validator.validate,
+  helper.validate,
   controller.getUsersList
 );
 
@@ -17,14 +17,14 @@ router.get(
   "/table",
   auth.authenticateToken,
   validator.rules('table'),
-  validator.validate,
+  helper.validate,
   controller.getUsersTable
 );
 
 router.get(
   "/:code",
   auth.authenticateToken,
-  validator.validate,
+  helper.validate,
   controller.getUser
 );
 
@@ -32,7 +32,7 @@ router.post(
   "/",
   auth.authenticateToken,
   validator.rules('createUser'),
-  validator.validate,
+  helper.validate,
   controller.insertUser
 );
 
