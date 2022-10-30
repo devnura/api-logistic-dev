@@ -1,11 +1,12 @@
-const CryptoJS = require("crypto-js");
 const {v4} = require('uuid');
 const crypto = require("crypto")
+const CryptoJS = require("crypto-js");
 // ENCRYPT TEXT
 const encryptText = (text) => {
   try {
     return CryptoJS.AES.encrypt(text, process.env.SECRET_KEY).toString();
   } catch (error) {
+    console.log(error.message)
     return error.message;
   }
 };
@@ -17,6 +18,7 @@ const decryptText = (cipherText) => {
       CryptoJS.enc.Utf8
     );
   } catch (error) {
+    console.log(error.message)
     return error.message;
   }
 };
@@ -61,11 +63,22 @@ const generatePaginate = (count, rows, page, limit, offset) => {
   return pagination;
 }
 
+const createResponse = (code, status, errors, data) => {
+  return {
+    code: parseInt(code),
+    status: status,
+    errors: Array.isArray(errors) ? errors : [{msg : errors}],
+    data: Array.isArray(data) ? data : [data],
+  }
+}
 module.exports = {
   encryptText,
   decryptText,
+  // encrypt,
+  // decrypt,
   getUniqueCode,
   getRandomStrig,
   getDomainName,
-  generatePaginate
+  generatePaginate,
+  createResponse
 };
