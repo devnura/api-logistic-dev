@@ -1,13 +1,30 @@
 require("dotenv").config();
 
 module.exports = {
+  // development: {
+  //   client: "pg",
+  //   connection: process.env.DB_URL,
+  //   migrations: {
+  //     directory: "./infrastructure/database/migrations",
+  //   },
+  //   seeds: { directory: "./infrastructure/database/seeds" },
+  // },
   development: {
     client: "pg",
-    connection: process.env.DB_URL,
+    connection: {
+      host : '192.168.62.102',
+      database: "DB_LOGISTIK",
+      user: "logistic",
+      password: "dev4logistic",
+    },
+    // connection: process.env.DB_URL,
+    pool: {
+      min: 2,
+      max: 10,
+    },
     migrations: {
       directory: "./infrastructure/database/migrations",
     },
-    seeds: { directory: "./infrastructure/database/seeds" },
   },
 
   testing: {
@@ -22,11 +39,12 @@ module.exports = {
   production: {
     client: "pg",
     connection: {
-      host : '',
-      database: "postgres",
-      user: "",
-      password: "",
+      host : '192.168.62.102',
+      database: "DB_LOGISTIK",
+      user: "logistic",
+      password: "dev4logistic",
     },
+    // connection: process.env.DB_URL,
     pool: {
       min: 2,
       max: 10,
