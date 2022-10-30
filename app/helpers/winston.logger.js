@@ -1,6 +1,7 @@
 const moment = require("moment");
 const winston = require("winston");
-require('winston-daily-rotate-file');
+require("winston-daily-rotate-file");
+require("dotenv").config();
 const { combine, timestamp, printf, colorize, align, json } = winston.format;
 
 const logLevels = {
@@ -11,7 +12,7 @@ const logLevels = {
   debug: 4,
   trace: 5,
 };
-let logger;
+var logger;
 
 //
 // Replaces the previous transports with those in the
@@ -23,47 +24,20 @@ let logger;
 //   transports: [new DailyRotateFile()],
 // });
 
-// const fileRotateTransport = new winston.transports.DailyRotateFile({
-//   filename: "./%DATE%-onlinetopup.log",
-//   datePattern: "YYYY-MM-DD",
-//   maxFiles: "1d",
-// });
-
+const fileRotateTransport = new winston.transports.DailyRotateFile({
+  filename: `app/logs/%DATE%-logistic.log`,
+  datePattern: "YYYY-MM-DD",
+  maxFiles: "90d",
+});
 //
 // If we're not in production then log to the `console` with the format:
 // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
 //
-if (process.env.NODE_ENV == "production") {
-  let logger = winston.createLogger({
-    levels: logLevels,
-    level: process.env.LOG_LEVEL || "info",
-    exitOnError: false,
-    //   format: combine(timestamp(), json()),
-    format: combine(
-      // colorize({ all: true }),
-      timestamp({
-        format: "YYYY-MM-DD HH:mm:ss.SSS",
-      }),
-      align(),
-      printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
-    ),
-    defaultMeta: { service: "project-service" },
-    transports: [
-      // fileRotateTransport,
-      //
-      // - Write all logs with importance level of `error` or less to `error.log`
-      // - Write all logs with importance level of `info` or less to `onlinetopup.log`
-      //
-      new winston.transports.File({
-        filename: `app/logs/error.log`,
-        level: "error",
-      }),
-      new winston.transports.File({
-        filename: `app/logs/${moment().format("YYYY-MM-DD")}-project.log`,
-      }),
-    ],
-  });
-} else {
+
+if (
+  process.env.NODE_ENV == "production" ||
+  process.env.NODE_ENV == "PRODUCTION"
+) {
   logger = winston.createLogger({
     levels: logLevels,
     level: process.env.LOG_LEVEL || "info",
@@ -77,12 +51,42 @@ if (process.env.NODE_ENV == "production") {
       align(),
       printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
     ),
-    defaultMeta: { service: "project-service" },
+    defaultMeta: { service: "topuponline-service" },
     transports: [
-      // fileRotateTransport,
+      fileRotateTransport,
       //
       // - Write all logs with importance level of `error` or less to `error.log`
-      // - Write all logs with importance level of `info` or less to `onlinetopup.log`
+      // - Write all logs with importance level of `info` or less to `logistic.log`
+      //
+      new winston.transports.File({
+        filename: `app/logs/error.log`,
+        level: "error",
+      }),
+      // new winston.transports.File({
+      //   filename: `app/logs/${moment().format("YYYY-MM-DD")}-logistic.log`,
+      // }),
+    ],
+  });
+} else {
+  logger = winston.createLogger({
+    levels: logLevels,
+    level: process.env.LOG_LEVEL || "debug",
+    exitOnError: false,
+    //   format: combine(timestamp(), json()),
+    format: combine(
+      // colorize({ all: true }),
+      timestamp({
+        format: "YYYY-MM-DD HH:mm:ss.SSS",
+      }),
+      align(),
+      printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
+    ),
+    defaultMeta: { service: "topuponline-service" },
+    transports: [
+      fileRotateTransport,
+      //
+      // - Write all logs with importance level of `error` or less to `error.log`
+      // - Write all logs with importance level of `info` or less to `logistic.log`
       //
       new winston.transports.File({
         filename: `app/logs/error.log`,
@@ -92,12 +96,14 @@ if (process.env.NODE_ENV == "production") {
         filename: `app/logs/debug/${moment().format("YYYY-MM-DD")}.log`,
         level: "debug",
       }),
-      new winston.transports.File({
-        filename: `app/logs/${moment().format("YYYY-MM-DD")}-project.log`,
-      }),
+      // new winston.transports.File({
+      //   filename: `app/logs/${moment().format("YYYY-MM-DD")}-logistic.log`,
+      // }),
     ],
   });
+}
 
+if (process.env.NODE_ENV != "testing" && process.env.NODE_ENV != "TESTING") {
   logger.add(
     new winston.transports.Console({
       //   format: winston.format.cli(),
