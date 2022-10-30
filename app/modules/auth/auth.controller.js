@@ -10,52 +10,12 @@ moment.locale("id");
 var result = {};
 var uniqueCode;
 
-// VALIDATION
-const validate = (method) => {
-  switch (method) {
-    case "login":
-      return [
-        body('email').notEmpty().withMessage('email is required!').isEmail().withMessage("Invalid Email format").escape().trim(),
-        body('password').notEmpty().withMessage('password is required').escape().trim()
-      ]
-
-    case "refreshToken":
-      return [
-        body("refresh_token").notEmpty().withMessage('refresh_token is required!')
-      ]
-    default:
-      break;
-  }
-};
-
 // LOGIN USER
 const loginUser = async (req, res) => {
   try {
 
     // generate unique code
-    uniqueCode = helper.getUniqueCode();
-
-    // log info
-    winston.logger.info(
-      `${uniqueCode} REQUEST login : ${JSON.stringify(req.body)}`
-    );
-
-    // check validator
-    const err = validationResult(req, res);
-    if (!err.isEmpty()) {
-      result = {
-        code: "400",
-        message: err.errors[0].msg,
-        data: {},
-      };
-
-      // log warn
-      winston.logger.warn(
-        `${uniqueCode} RESPONSE login: ${JSON.stringify(result)}`
-      );
-
-      return res.status(200).json(result);
-    }
+    uniqueCode = req.requestId;
 
     let {
       email,
@@ -70,20 +30,16 @@ const loginUser = async (req, res) => {
 
     // check data login
     let checkUser = await model.checkUser(email);
-    // console.log(checkDataLoginUser)
     if (!checkUser) {
-      result = {
-        code: "403",
-        message: "User doesn't exists.",
-        data: {},
-      };
+
+      result = helper.createResponse(403, "UNAUTHORIZED", ["Invalid email or password"], []);
 
       // log warn
       winston.logger.info(
-        `${uniqueCode} RESPONSE login: ${JSON.stringify(result)}`
+        `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
       );
 
-      return res.status(200).json(result);
+      return res.status(401).json(result);
     }
 
     // log debug
@@ -95,25 +51,22 @@ const loginUser = async (req, res) => {
     );
 
     if (!checkPassword) {
-      result = {
-        code: "403",
-        message: "Password is wrong.",
-        data: {},
-      };
+
+      result = helper.createResponse(403, "UNAUTHORIZED", "Invalid email or password", []);
 
       // log warn
       winston.logger.info(
-        `${uniqueCode} RESPONSE login: ${JSON.stringify(result)}`
+        `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
       );
 
-      return res.status(200).json(result);
+      return res.status(401).json(result);
     }
 
     // cek apakah user sudah melakukan login atau belum
     let checkUserLogin = await model.checUserLogin(checkUser.c_code)
     if (!checkUserLogin) {
       // log debug
-      winston.logger.debug(`${uniqueCode} generating access token...`);
+      winston.logger.debug(`${req.requestId} ${req.requestUrl} generating access token...`);
 
       // generate access token
       accessToken = jwt.generateAccessToken({
@@ -123,7 +76,7 @@ const loginUser = async (req, res) => {
       });
 
       // log debug
-      winston.logger.debug(`${uniqueCode} generating refresh token...`);
+      winston.logger.debug(`${req.requestId} ${req.requestUrl} generating refresh token...`);
 
       // generate refresh token
       refreshToken = jwt.generateRefreshToken({
@@ -131,14 +84,14 @@ const loginUser = async (req, res) => {
       });
 
       // log debug
-      winston.logger.debug(`${uniqueCode} inserting refresh token...`);
+      winston.logger.debug(`${req.requestId} ${req.requestUrl} inserting refresh token...`);
 
       // insert refresh token
       await model.insertRefreshToken(checkUser.c_code, refreshToken);
 
     } else {
       // log debug
-      winston.logger.debug(`${uniqueCode} use existing access token...`);
+      winston.logger.debug(`${req.requestId} ${req.requestUrl} use existing access token...`);
 
       // generate access token
       accessToken = jwt.generateAccessToken({
@@ -150,40 +103,33 @@ const loginUser = async (req, res) => {
       refreshToken = checkUserLogin.c_refresh_token
 
     }
+    let data = {
+      first_name: checkUser.c_first_name,
+      last_name: checkUser?.c_last_name || "",
+      email: checkUser.c_email,
+      group_code: checkUser.c_group_code,
+      group_name: checkUser.c_group_name,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    }
 
-    result = {
-      code: "00",
-      message: "Login Success.",
-      data: {
-        first_name: checkUser.c_first_name,
-        last_name: checkUser?.c_last_name || "",
-        email: checkUser.c_email,
-        group_code: checkUser.c_group_code,
-        group_name: checkUser.c_group_name,
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      },
-    };
-
+    result = helper.createResponse(200, "OK", [], data);
+   
     // log info
     winston.logger.info(
-      `${uniqueCode} RESPONSE login: ${JSON.stringify(result)}`
+      `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
     );
 
     return res.status(200).json(result);
   } catch (error) {
     // create log
+    result = helper.createResponse(500, "Internal Server Error", error.message, []);
+
     winston.logger.error(
-      `500 internal server error - backend server | ${error.message}`
+      `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
     );
 
-    return res.status(200).json({
-      code: "500",
-      message: process.env.NODE_ENV != "production" ?
-        error.message :
-        "500 internal server error - backend server.",
-      data: {},
-    });
+    return res.status(500).json(result);
   }
 };
 
@@ -192,25 +138,20 @@ const refreshToken = async (req, res) => {
   try {
 
     // generate unique code
-    uniqueCode = helper.getUniqueCode();
-
-    // log info
-    winston.logger.info(
-      `${uniqueCode} REQUEST refresh token : ${JSON.stringify(req.body)}`
-    );
+    uniqueCode = req.requestId;
 
     const code = req.code;
 
     let { refresh_token } = req.body;
 
     // log debug
-    winston.logger.debug(`${uniqueCode} authenticating refresh token...`);
+    winston.logger.debug(`${uniqueCode} ${req.requestUrl} authenticating refresh token...`);
 
     // verify
     jwt.authenticateRefreshToken;
 
     // log debug
-    winston.logger.debug(`${uniqueCode} checking refresh token...`);
+    winston.logger.debug(`${uniqueCode} ${req.requestUrl} checking refresh token...`);
 
     let checkRefreshToken = await model.checkRefreshToken(
       code,
@@ -218,22 +159,18 @@ const refreshToken = async (req, res) => {
     );
 
     if (!checkRefreshToken) {
-      result = {
-        code: "400",
-        message: "Refresh Token is invalid.",
-        data: {},
-      };
+      result = helper.createResponse(401, "Unauthorized", "Refresh Token is invalid.", []);
 
       // log warn
       winston.logger.warn(
-        `${uniqueCode} RESPONSE refresh token: ${JSON.stringify(result)}`
+        `${uniqueCode} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
       );
 
-      return res.status(200).json(result);
+      return res.status(401).json(result);
     }
 
     // log debug
-    winston.logger.debug(`${uniqueCode} generating access token...`);
+    winston.logger.debug(`${uniqueCode} ${req.requestUrl} generating access token...`);
 
     let accessToken;
     let refreshToken;
@@ -243,18 +180,14 @@ const refreshToken = async (req, res) => {
       code
     );
     if (!checkDataLoginUser) {
-      result = {
-        code: "403",
-        message: "User doesn't exists.",
-        data: {},
-      };
+      result = helper.createResponse(402, "Unauthorized", "Refresh Token is invalid.", []);
 
       // log warn
       winston.logger.warn(
-        `${uniqueCode} RESPONSE login: ${JSON.stringify(result)}`
+        `${uniqueCode} ${req.requestUrl}RESPONSE : ${JSON.stringify(result)}`
       );
 
-      return res.status(200).json(result);
+      return res.status(401).json(result);
     }
 
     // generate new access token
@@ -265,47 +198,40 @@ const refreshToken = async (req, res) => {
     });
 
     // log debug
-    winston.logger.debug(`${uniqueCode} generating refresh token...`);
-
+    winston.logger.debug(`${uniqueCode} ${req.requestUrl} generating refresh token...`);
+    console.log("ini : ", checkDataLoginUser.c_code)
     // generate new refresh token
     refreshToken = jwt.generateRefreshToken({
       code: helper.encryptText(checkDataLoginUser.c_code)
     });
 
     // log debug
-    winston.logger.debug(`${uniqueCode} updating refresh token...`);
+    winston.logger.debug(`${uniqueCode} ${req.requestUrl} updating refresh token...`);
 
     // update insert refresh token
     await model.updateRefreshToken(code, refresh_token, refreshToken);
+    const data = {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    }
 
-    result = {
-      code: "00",
-      message: "New Token has been generated.",
-      data: {
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      },
-    };
+    result = helper.createResponse(200, "OK", [], data);
 
     // log info
     winston.logger.info(
-      `${uniqueCode} RESPONSE refresh token: ${JSON.stringify(result)}`
+      `${uniqueCode} ${req.requestUrl} RESPONSE refresh token: ${JSON.stringify(result)}`
     );
 
     return res.status(200).json(result);
   } catch (error) {
     // create log
-    winston.logger.error(
-      `500 internal server error - backend server | ${error.message}`
-    );
+    result = helper.createResponse(500, "Internal Server Error", error.message, []);
 
-    return res.status(200).json({
-      code: "500",
-      message: process.env.NODE_ENV != "production" ?
-        error.message :
-        "500 internal server error - backend server.",
-      data: {},
-    });
+    winston.logger.error(
+      `${req.requestId} ${req.requestUrl} RESPONSE : ${JSON.stringify(result)}`
+    );
+    
+    return res.status(500).json(result);
   }
 };
 
@@ -364,7 +290,6 @@ const logoutUser = async (req, res) => {
 }
 
 module.exports = {
-  validate,
   loginUser,
   refreshToken,
   logoutUser

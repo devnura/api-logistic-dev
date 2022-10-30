@@ -64,6 +64,17 @@ const checkUser =  (email) => {
 
 const checUserLogin = (code) => {
   let result = knex("t_m_refresh_token")
+    .select([
+      'tmu.c_code',
+      'tmu.c_group_code',
+      'tmu.c_first_name',
+      'tmu.c_last_name',
+      't_m_refresh_token.i_refresh_token',
+      't_m_refresh_token.c_refresh_token'
+    ])
+    .leftJoin('public.t_m_user as tmu', function () {
+      this.on('tmu.c_code', '=', 't_m_refresh_token.c_user_code')
+    })
     .where("c_user_code", code)
     .first()
   return result;
